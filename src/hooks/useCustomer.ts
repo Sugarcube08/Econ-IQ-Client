@@ -8,7 +8,7 @@ export function useCustomers(params: {
   sort_order?: string;
   search?: string;
   current_state?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }) {
   return useQuery({
     queryKey: ['customers', params],

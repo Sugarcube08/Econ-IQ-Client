@@ -28,6 +28,16 @@ export default function LoginPage() {
     resolver: zodResolver(emailSchema),
   });
 
+  // Focus first OTP input when moving to OTP step
+  useEffect(() => {
+    if (step === 'otp') {
+      const timer = setTimeout(() => {
+        otpInputsRef.current[0]?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [step]);
+
   // Handle email form submission
   const onEmailSubmit = async (values: EmailFormValues) => {
     setErrorMsg(null);
@@ -35,12 +45,13 @@ export default function LoginPage() {
       await requestOtp.mutateAsync(values.email);
       setEmailInput(values.email);
       setStep('otp');
-      // Focus first OTP input
-      setTimeout(() => {
-        otpInputsRef.current[0]?.focus();
-      }, 100);
-    } catch (e: any) {
-      setErrorMsg(e.response?.data?.message || 'Failed to request access token.');
+    } catch (e: unknown) {
+      let errMsg = 'Failed to request access token.';
+      if (e && typeof e === 'object' && 'response' in e) {
+        const res = (e as { response?: { data?: { message?: string } } }).response;
+        if (res?.data?.message) errMsg = res.data.message;
+      }
+      setErrorMsg(errMsg);
     }
   };
 
@@ -98,8 +109,13 @@ export default function LoginPage() {
     try {
       await verifyOtp.mutateAsync({ email: emailInput, otp: fullOtp });
       // Redirect happens in the layout guards automatically
-    } catch (err: any) {
-      setErrorMsg(err.response?.data?.message || 'Invalid or expired verification token.');
+    } catch (err: unknown) {
+      let errMsg = 'Invalid or expired verification token.';
+      if (err && typeof err === 'object' && 'response' in err) {
+        const res = (err as { response?: { data?: { message?: string } } }).response;
+        if (res?.data?.message) errMsg = res.data.message;
+      }
+      setErrorMsg(errMsg);
     }
   };
 

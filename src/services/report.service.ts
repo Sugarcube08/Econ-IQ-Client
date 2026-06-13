@@ -4,7 +4,7 @@ export const ReportService = {
   async downloadCustomersCsv(params?: {
     search?: string;
     current_state?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   }): Promise<Blob> {
     const res = await apiClient.get('/customers/export/csv', {
       params,

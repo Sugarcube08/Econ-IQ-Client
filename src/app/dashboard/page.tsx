@@ -7,7 +7,6 @@ import {
   useDashboardOverview,
   useDashboardCharts,
   useDashboardQueues,
-  useTopContributors,
 } from '@/hooks/useDashboard';
 import { formatCurrency, formatPercent } from '@/lib/utils';
 
@@ -18,7 +17,6 @@ export default function DashboardPage() {
   const { data: overview, isLoading: isOverviewLoading, isError: isOverviewError } = useDashboardOverview();
   const { commercialFlow, agingDistribution, stateDistribution, isLoading: isChartsLoading } = useDashboardCharts();
   const { deteriorating, improving, highRisk, isLoading: isQueuesLoading } = useDashboardQueues();
-  const { data: topContributors } = useTopContributors();
 
   const handleExport = () => {
     router.push('/reports');
@@ -107,7 +105,6 @@ export default function DashboardPage() {
 
   // States distribution data mapping
   const stateData = stateDistribution.data || {};
-  const totalStateAccounts = Object.values(stateData).reduce((a, b) => a + b.count, 0) || 1;
 
   return (
     <div className="space-y-xl">

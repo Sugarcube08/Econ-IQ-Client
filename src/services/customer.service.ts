@@ -16,7 +16,7 @@ export const CustomerService = {
     sort_order?: string;
     search?: string;
     current_state?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   }): Promise<StandardResponse<{ customers: Customer[] }>> {
     const res = await apiClient.get<StandardResponse<{ customers: Customer[] }>>('/customers', {
       params,

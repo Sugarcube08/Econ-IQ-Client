@@ -10,7 +10,7 @@ export default function ApiKeysPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Creation states
-  const [showAddForm, setShowAddForm] = useState(false);
+
   const [name, setName] = useState('');
   const [readIntel, setReadIntel] = useState(true);
   const [createApiKey, setCreateApiKey] = useState(false);
@@ -23,16 +23,24 @@ export default function ApiKeysPage() {
     try {
       const res = await ApiKeyService.getApiKeys();
       setKeys(res.data || []);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Failed to load API keys:', e);
-      setError(e.response?.data?.message || 'Failed to load developer keys.');
+      let errMsg = 'Failed to load developer keys.';
+      if (e && typeof e === 'object' && 'response' in e) {
+        const res = (e as { response?: { data?: { message?: string } } }).response;
+        if (res?.data?.message) errMsg = res.data.message;
+      }
+      setError(errMsg);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchKeys();
+    const timer = setTimeout(() => {
+      fetchKeys();
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -55,8 +63,13 @@ export default function ApiKeysPage() {
       setAddMsg('Key created successfully. Copy the raw key secret now as it will not be shown again!');
       setName('');
       fetchKeys();
-    } catch (err: any) {
-      setAddMsg(err.response?.data?.message || 'Failed to generate API key.');
+    } catch (err: unknown) {
+      let errMsg = 'Failed to generate API key.';
+      if (err && typeof err === 'object' && 'response' in err) {
+        const res = (err as { response?: { data?: { message?: string } } }).response;
+        if (res?.data?.message) errMsg = res.data.message;
+      }
+      setAddMsg(errMsg);
     }
   };
 
@@ -65,8 +78,13 @@ export default function ApiKeysPage() {
     try {
       await ApiKeyService.revokeApiKey(id);
       fetchKeys();
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to revoke key.');
+    } catch (err: unknown) {
+      let errMsg = 'Failed to revoke key.';
+      if (err && typeof err === 'object' && 'response' in err) {
+        const res = (err as { response?: { data?: { message?: string } } }).response;
+        if (res?.data?.message) errMsg = res.data.message;
+      }
+      alert(errMsg);
     }
   };
 

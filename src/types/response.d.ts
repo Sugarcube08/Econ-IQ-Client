@@ -16,7 +16,7 @@ export interface StandardResponse<T> {
       sort_by: string;
       sort_order: 'asc' | 'desc';
     };
-    filters?: Record<string, any>;
+    filters?: Record<string, unknown>;
     search?: string | null;
     processing_time_ms?: number;
   };

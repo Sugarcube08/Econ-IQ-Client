@@ -24,16 +24,24 @@ export default function UsersPage() {
     try {
       const res = await UserService.getUsers();
       setUsers(res.data.users || []);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Failed to load users:', e);
-      setError(e.response?.data?.message || 'Unauthorized or failed user fetch.');
+      let errMsg = 'Unauthorized or failed user fetch.';
+      if (e && typeof e === 'object' && 'response' in e) {
+        const res = (e as { response?: { data?: { message?: string } } }).response;
+        if (res?.data?.message) errMsg = res.data.message;
+      }
+      setError(errMsg);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
+    const timer = setTimeout(() => {
+      fetchUsers();
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleAddUser = async (e: React.FormEvent) => {
@@ -49,8 +57,13 @@ export default function UsersPage() {
       setEmail('');
       setFullName('');
       fetchUsers();
-    } catch (err: any) {
-      setAddMsg(err.response?.data?.message || 'Failed to create user account.');
+    } catch (err: unknown) {
+      let errMsg = 'Failed to create user account.';
+      if (err && typeof err === 'object' && 'response' in err) {
+        const res = (err as { response?: { data?: { message?: string } } }).response;
+        if (res?.data?.message) errMsg = res.data.message;
+      }
+      setAddMsg(errMsg);
     }
   };
 
@@ -59,8 +72,13 @@ export default function UsersPage() {
     try {
       await UserService.deleteUser(id);
       fetchUsers();
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to deactivate user.');
+    } catch (err: unknown) {
+      let errMsg = 'Failed to deactivate user.';
+      if (err && typeof err === 'object' && 'response' in err) {
+        const res = (err as { response?: { data?: { message?: string } } }).response;
+        if (res?.data?.message) errMsg = res.data.message;
+      }
+      alert(errMsg);
     }
   };
 

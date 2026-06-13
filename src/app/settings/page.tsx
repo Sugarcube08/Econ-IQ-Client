@@ -4,8 +4,15 @@ import React, { useState, useEffect } from 'react';
 import { apiClient } from '@/lib/axios';
 import { StandardResponse } from '@/types/response';
 
+interface HealthStatus {
+  status: string;
+  environment?: string;
+  version?: string;
+  error?: string;
+}
+
 export default function SettingsPage() {
-  const [health, setHealth] = useState<any>(null);
+  const [health, setHealth] = useState<HealthStatus | null>(null);
   const [isCheckingHealth, setIsCheckingHealth] = useState(false);
   const [notifEnabled, setNotifEnabled] = useState(true);
   const [defaultWindow, setDefaultWindow] = useState('365');
@@ -14,7 +21,7 @@ export default function SettingsPage() {
   const checkHealth = async () => {
     setIsCheckingHealth(true);
     try {
-      const res = await apiClient.get<StandardResponse<any>>('/health');
+      const res = await apiClient.get<StandardResponse<HealthStatus>>('/health');
       setHealth(res.data.data || { status: 'healthy', environment: 'production', version: '2.0.0' });
     } catch (e) {
       console.error('Failed to retrieve health status:', e);
@@ -25,7 +32,10 @@ export default function SettingsPage() {
   };
 
   useEffect(() => {
-    checkHealth();
+    const timer = setTimeout(() => {
+      checkHealth();
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleSave = (e: React.FormEvent) => {

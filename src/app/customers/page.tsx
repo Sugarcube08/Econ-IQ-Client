@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCustomers } from '@/hooks/useCustomer';
 import { ReportService } from '@/services/report.service';
@@ -38,7 +37,7 @@ export default function CustomersPage() {
     ...(stateFilter ? { current_state: stateFilter } : {}),
   };
 
-  const { data, isLoading, isError, refetch } = useCustomers(params);
+  const { data, isLoading, isError } = useCustomers(params);
 
   const handleSort = (field: string) => {
     if (sortBy === field) {

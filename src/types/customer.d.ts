@@ -61,15 +61,23 @@ export interface CustomerProfile {
 }
 
 export interface GraphPoint {
-  date: string;
-  value: number;
-  volume?: number;
-  count?: number;
+  period_start?: string;
+  period_end?: string;
+  purchase_amount?: number;
+  payment_amount?: number;
+  rg_amount?: number;
+  outstanding?: number;
+  closing_outstanding?: number;
+  amount?: number;
+  value?: number;
   sales_volume?: number;
   collection_volume?: number;
   outstanding_exposure?: number;
+  date?: string;
+  volume?: number;
+  count?: number;
   balance?: number;
-  amount?: number;
+  [key: string]: unknown;
 }
 
 export interface PredictionDetail {
@@ -78,7 +86,7 @@ export interface PredictionDetail {
   score: number;
   confidence: number;
   model_version: string;
-  features_snapshot: Record<string, any>;
+  features_snapshot: Record<string, unknown>;
   key_drivers: string[];
   risk_level?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   growth_potential?: 'CONTRACTION' | 'STABLE' | 'EXPANSION' | 'ACCELERATING';

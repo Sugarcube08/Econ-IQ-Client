@@ -6,7 +6,7 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { AuthService } from '@/services/auth.service';
 
 export default function Providers({ children }: { children: React.ReactNode }) {
-  const { setSession, clearSession, refreshToken } = useAuthStore();
+  const { setSession, clearSession } = useAuthStore();
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {

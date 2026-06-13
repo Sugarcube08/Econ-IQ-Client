@@ -9,6 +9,7 @@ import {
   useCustomerGraphs,
 } from '@/hooks/useCustomer';
 import { formatCurrency, formatPercent, formatDate } from '@/lib/utils';
+import { GraphPoint } from '@/types/customer';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -80,7 +81,7 @@ export default function CustomerDetailPage({ params }: PageProps) {
   };
 
   // Helper to draw inline SVG charts
-  const drawSvgChart = (dataPoints: any[] = [], color = '#0F766E', dashed = false) => {
+  const drawSvgChart = (dataPoints: GraphPoint[] = [], color = '#0F766E', dashed = false) => {
     if (!dataPoints || dataPoints.length === 0) {
       return (
         <div className="h-full flex items-center justify-center text-xs text-outline font-sans">
@@ -89,7 +90,7 @@ export default function CustomerDetailPage({ params }: PageProps) {
       );
     }
 
-    const getVal = (d: any) =>
+    const getVal = (d: GraphPoint) =>
       Math.abs(
         d.purchase_amount ??
         d.payment_amount ??
@@ -133,7 +134,7 @@ export default function CustomerDetailPage({ params }: PageProps) {
   const negativeDrivers = ['SLOW_SETTLEMENT', 'LIQUIDITY_STRESS', 'INCONSISTENT_TRADING', 'CRITICAL_BEHAVIORAL_STRESS'];
 
   const allDrivers = predictions
-    ? Object.values(predictions).flatMap((p: any) => p.key_drivers || [])
+    ? Object.values(predictions).flatMap((p) => (p as { key_drivers?: string[] }).key_drivers || [])
     : [];
   
   const activePositive = allDrivers.filter((d) => positiveDrivers.includes(d) || d.includes('regularity') || d.includes('velocity'));
