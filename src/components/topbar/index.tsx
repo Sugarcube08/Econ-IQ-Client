@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { Search, Bell } from 'lucide-react';
 
 export default function TopBar({ title }: { title?: string }) {
   const { user } = useAuth();
@@ -23,7 +24,7 @@ export default function TopBar({ title }: { title?: string }) {
       <div className="flex items-center gap-lg">
         {/* Search */}
         <div className="hidden lg:flex items-center bg-surface-container-low rounded border border-outline-variant px-sm py-1 focus-within:ring-2 focus-within:ring-brand-accent transition-all w-64">
-          <span className="material-symbols-outlined text-on-surface-variant text-[18px]">search</span>
+          <Search className="w-4 h-4 text-on-surface-variant shrink-0" />
           <input
             className="bg-transparent border-none focus:outline-none focus:ring-0 text-sm text-on-surface w-full py-0 px-2 placeholder:text-outline"
             placeholder="Search accounts, transactions..."
@@ -33,8 +34,8 @@ export default function TopBar({ title }: { title?: string }) {
 
         {/* Actions */}
         <div className="flex items-center gap-sm text-on-surface-variant">
-          <button className="p-sm hover:text-brand-accent transition-all relative">
-            <span className="material-symbols-outlined">notifications</span>
+          <button className="p-sm hover:text-brand-accent transition-all relative cursor-pointer bg-transparent border-0">
+            <Bell className="w-4 h-4" />
             <span className="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
           </button>
         </div>
@@ -48,7 +49,7 @@ export default function TopBar({ title }: { title?: string }) {
             className="w-8 h-8 rounded-full border border-outline-variant"
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCGchDSEakrKOcETei73KAXiI49lgoozHkL8iexvK7aI3FQ4gIoRSJLEvcqkdVoayqudYGmq-5M-oeXThlhltVEf4_c1nR21R8oLbuANpgPpRF0QUZ2ViJb04im9ySAgK_JaEbEs9hoynV6B1BtJEflHux_G22gWdmEY66-VM721fw4feylDJpQo0VN3fRouxDcEz7EIwpNQewTerTsGsTCNndbBN-I4aAO1xSce_YXsZd9aBIns-lp14q5EMQBieVjWYUbjF3slw"
           />
-          <div className="hidden xl:flex flex-col items-start leading-none">
+          <div className="hidden xl:flex flex-col items-start leading-none text-xs">
             <span className="font-sans text-xs font-semibold text-on-surface">{formattedName}</span>
             <span className="font-sans text-[10px] text-on-surface-variant uppercase mt-1">
               {roleLabel}

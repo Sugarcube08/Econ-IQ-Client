@@ -3,14 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { ApiKeyService } from '@/services/apikey.service';
 import { APIKey } from '@/types/auth';
+import EmptyState from '@/components/EmptyState';
 
 export default function ApiKeysPage() {
   const [keys, setKeys] = useState<APIKey[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  
   // Creation states
-
   const [name, setName] = useState('');
   const [readIntel, setReadIntel] = useState(true);
   const [createApiKey, setCreateApiKey] = useState(false);
@@ -99,7 +99,7 @@ export default function ApiKeysPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-md">
         {/* Creator form */}
-        <div className="bg-surface p-lg rounded-xl border border-outline-variant shadow-sm h-fit space-y-md">
+        <div className="bg-surface p-lg rounded-xl border border-outline-variant shadow-sm h-fit space-y-md bg-white">
           <h3 className="font-headline text-base font-bold text-primary">Issue Developer Credentials</h3>
           
           {addMsg && (
@@ -156,24 +156,30 @@ export default function ApiKeysPage() {
               </label>
             </div>
 
-            <button type="submit" className="w-full h-10 bg-[#0F766E] text-white font-bold rounded hover:brightness-110">
+            <button type="submit" className="w-full h-10 bg-[#0F766E] text-white font-bold rounded hover:brightness-110 cursor-pointer">
               Generate Key
             </button>
           </form>
         </div>
 
         {/* Existing keys table */}
-        <div className="lg:col-span-2 bg-surface rounded-xl border border-outline-variant shadow-sm overflow-hidden flex flex-col">
+        <div className="lg:col-span-2 bg-surface rounded-xl border border-outline-variant shadow-sm overflow-hidden flex flex-col bg-white">
           <div className="p-md border-b border-outline-variant bg-surface-container-low">
             <h3 className="font-headline text-sm font-bold text-primary">Registered API Keys</h3>
           </div>
 
           {isLoading ? (
-            <div className="py-16 text-center text-xs text-outline font-sans">Loading credentials store...</div>
+            <div className="py-16 text-center text-xs text-outline font-sans animate-pulse">Loading credentials store...</div>
           ) : error ? (
             <div className="py-16 text-center text-xs text-error font-sans">{error}</div>
           ) : keys.length === 0 ? (
-            <div className="py-16 text-center text-xs text-outline font-sans">No API credentials generated.</div>
+            <div className="p-lg">
+              <EmptyState
+                icon="key"
+                title="No API Credentials"
+                description="Issue authorization keys to authorize your ERP ledgers or trigger auto-checkouts."
+              />
+            </div>
           ) : (
             <div className="divide-y divide-outline-variant/30">
               {keys.map((k) => (

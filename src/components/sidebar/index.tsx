@@ -1,40 +1,128 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { useOnboardingStore } from '@/stores/useOnboardingStore';
+import {
+  LayoutDashboard,
+  Users,
+  BarChart3,
+  User as UserIcon,
+  Key,
+  Settings,
+  LogOut,
+  ChevronUp,
+  ChevronsUpDown,
+  Plus
+} from 'lucide-react';
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { logout } = useAuth();
+  const { user } = useAuthStore();
+  
+  // Multi-org store hooks
+  const {
+    organizations,
+    activeOrgId,
+    switchOrganization,
+    addOrganization
+  } = useOnboardingStore();
+
+  const [orgDropdownOpen, setOrgDropdownOpen] = useState(false);
+
+  const activeOrg = organizations.find((o) => o.id === activeOrgId) || { id: 'org_default', name: 'Primary Organization' };
 
   const menuItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: 'dashboard' },
-    { name: 'Customers', path: '/customers', icon: 'groups' },
-    { name: 'Reports', path: '/reports', icon: 'bar_chart' },
-    { name: 'Users', path: '/users', icon: 'person' },
-    { name: 'API Keys', path: '/api-keys', icon: 'key' },
-    { name: 'Settings', path: '/settings', icon: 'settings' },
+    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+    { name: 'Customers', path: '/customers', icon: Users },
+    { name: 'Reports', path: '/reports', icon: BarChart3 },
+    { name: 'Users', path: '/users', icon: UserIcon },
+    { name: 'API Keys', path: '/api-keys', icon: Key },
+    { name: 'Org Settings', path: '/organization', icon: Settings },
   ];
 
+  const handleCreateOrg = () => {
+    const name = prompt('Enter new organization name:');
+    if (name && name.trim()) {
+      addOrganization(name.trim());
+      setOrgDropdownOpen(false);
+    }
+  };
+
+  const formattedName = user?.full_name || user?.email || 'J. Sterling';
+  const roleLabel = user ? user.role.replace('_', ' ') : 'CFO';
+
   return (
-    <nav className="hidden md:flex bg-primary-container fixed left-0 top-0 h-full w-sidebar-width flex-col z-50 border-r border-outline-variant text-on-primary-container">
-      {/* Branding */}
-      <div className="flex items-center gap-md px-lg py-xl">
-        <div className="w-8 h-8 bg-brand-accent rounded flex items-center justify-center text-white font-bold font-headline text-lg">
-          EQ
-        </div>
-        <div>
-          <h1 className="text-headline font-bold text-white leading-none text-lg">Econ-IQ</h1>
-          <span className="text-[11px] font-sans text-on-primary-container">Enterprise Intelligence</span>
-        </div>
+    <nav className="hidden md:flex bg-primary-container fixed left-0 top-0 h-full w-sidebar-width flex-col z-50 border-r border-[#3e4947]/30 text-on-primary-container bg-[#1c2023]">
+      
+      {/* Dynamic Organization Switcher */}
+      <div className="relative border-b border-[#3e4947]/20 p-md">
+        <button
+          onClick={() => setOrgDropdownOpen(!orgDropdownOpen)}
+          className="w-full flex items-center justify-between gap-sm p-sm rounded hover:bg-white/5 transition-all text-left cursor-pointer bg-transparent border-0"
+        >
+          <div className="flex items-center gap-3 overflow-hidden">
+            <div className="w-8 h-8 bg-[#0F766E] rounded flex items-center justify-center text-white font-bold font-headline text-md shrink-0">
+              {activeOrg.name.slice(0, 2).toUpperCase()}
+            </div>
+            <div className="overflow-hidden leading-none text-xs">
+              <span className="font-headline font-bold text-white block truncate">{activeOrg.name}</span>
+              <span className="text-[9px] font-sans text-on-primary-container/60 mt-1 uppercase tracking-wider block">Switcher</span>
+            </div>
+          </div>
+          <ChevronsUpDown className="w-4 h-4 text-on-primary-container/60 shrink-0" />
+        </button>
+
+        {/* Switcher Dropdown */}
+        {orgDropdownOpen && (
+          <div className="absolute top-full left-4 right-4 bg-[#101417] border border-[#3e4947] rounded-lg mt-1 p-2 space-y-1 z-50 shadow-xl font-sans text-xs text-white">
+            <span className="text-[9px] text-[#889391] uppercase tracking-wider font-bold block px-2 py-1 border-b border-[#3e4947]/40 mb-1">
+              Select Workspace
+            </span>
+            <div className="max-h-32 overflow-y-auto space-y-0.5">
+              {organizations.map((org) => {
+                const isSelected = org.id === activeOrg.id;
+                return (
+                  <button
+                    key={org.id}
+                    onClick={() => {
+                      switchOrganization(org.id);
+                      setOrgDropdownOpen(false);
+                    }}
+                    className="w-full text-left p-2 rounded hover:bg-white/5 transition-colors flex items-center justify-between cursor-pointer border-0 bg-transparent text-white"
+                  >
+                    <span className={`truncate ${isSelected ? 'font-bold text-[#80d5cb]' : 'text-[#889391]'}`}>
+                      {org.name}
+                    </span>
+                    {isSelected && (
+                      <span className="text-[#80d5cb] font-bold">✓</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="border-t border-[#3e4947]/40 pt-1 mt-1">
+              <button
+                onClick={handleCreateOrg}
+                className="w-full text-left p-2 text-[#80d5cb] hover:bg-white/5 transition-colors flex items-center gap-2 font-bold cursor-pointer border-0 bg-transparent text-xs"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                New Workspace
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Tabs */}
+      {/* Menu Tabs */}
       <div className="flex-1 flex flex-col gap-xs px-sm py-md overflow-y-auto">
         {menuItems.map((item) => {
           const isActive = pathname.startsWith(item.path);
+          const Icon = item.icon;
           return (
             <Link
               key={item.name}
@@ -45,22 +133,30 @@ export default function Sidebar() {
                   : 'text-on-primary-container/70 hover:bg-primary/20 hover:text-white hover:scale-[0.98]'
               }`}
             >
-              <span className={`material-symbols-outlined ${isActive ? 'fill' : ''}`}>
-                {item.icon}
-              </span>
+              <Icon className="w-4 h-4 shrink-0" />
               <span className="font-sans text-sm">{item.name}</span>
             </Link>
           );
         })}
       </div>
 
-      {/* Footer / Logout */}
-      <div className="mt-auto px-sm py-md border-t border-outline-variant/20">
+      {/* Profile Menu Footer */}
+      <div className="mt-auto px-md py-md border-t border-outline-variant/20 space-y-3">
+        <div className="flex items-center gap-3 px-sm">
+          <div className="w-8 h-8 rounded-full border border-[#3e4947] bg-[#0F766E]/20 text-[#80d5cb] flex items-center justify-center font-bold text-xs uppercase">
+            {formattedName.slice(0, 2)}
+          </div>
+          <div className="overflow-hidden leading-none text-xs">
+            <span className="font-sans font-bold text-xs text-white block truncate">{formattedName}</span>
+            <span className="text-[9px] font-sans text-on-primary-container/60 uppercase mt-1 block">{roleLabel}</span>
+          </div>
+        </div>
+
         <button
           onClick={() => logout.mutate()}
-          className="w-full text-left text-on-primary-container/70 flex items-center gap-md px-lg py-md hover:bg-primary/20 hover:text-white rounded-lg mx-sm transition-all duration-200"
+          className="w-full text-left text-on-primary-container/70 flex items-center gap-md px-lg py-md hover:bg-primary/20 hover:text-white rounded-lg transition-all duration-200 cursor-pointer bg-transparent border-0"
         >
-          <span className="material-symbols-outlined">logout</span>
+          <LogOut className="w-4 h-4 shrink-0" />
           <span className="font-sans text-sm">Sign Out</span>
         </button>
       </div>

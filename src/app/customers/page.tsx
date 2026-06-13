@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useCustomers } from '@/hooks/useCustomer';
 import { ReportService } from '@/services/report.service';
 import { formatCurrency, formatPercent, formatDate } from '@/lib/utils';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { SectionHeader, CaseStudyCards, CTASection } from '@/components/marketing/MarketingComponents';
 
-export default function CustomersPage() {
+// --- AUTHENTICATED B2B CREDIT ANALYSIS MATRIX ---
+function AuthenticatedCustomers() {
   const router = useRouter();
-  // States for server sorting, searching, pagination, filtering
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [search, setSearch] = useState('');
@@ -18,16 +20,14 @@ export default function CustomersPage() {
   const [stateFilter, setStateFilter] = useState<string>('');
   const [isExporting, setIsExporting] = useState(false);
 
-  // Debounce search input
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(search);
-      setPage(1); // reset to first page on search
+      setPage(1);
     }, 400);
     return () => clearTimeout(handler);
   }, [search]);
 
-  // Query customers with active server modifiers
   const params = {
     page,
     limit,
@@ -76,7 +76,6 @@ export default function CustomersPage() {
 
   return (
     <div className="space-y-lg">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h2 className="text-3xl font-headline font-semibold text-primary">Customer Intelligence</h2>
@@ -96,11 +95,9 @@ export default function CustomersPage() {
         </div>
       </div>
 
-      {/* Advanced Filter Bar */}
       <div className="bg-surface rounded-lg border border-outline-variant shadow-sm overflow-hidden flex flex-col">
         <div className="p-md border-b border-outline-variant bg-surface-container-low flex flex-col md:flex-row items-center gap-md justify-between">
           <div className="flex flex-1 items-center gap-md w-full">
-            {/* Search Input */}
             <div className="relative flex-1 max-w-sm">
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">
                 search
@@ -114,7 +111,6 @@ export default function CustomersPage() {
               />
             </div>
 
-            {/* State Filter Dropdown */}
             <select
               value={stateFilter}
               onChange={(e) => {
@@ -152,7 +148,6 @@ export default function CustomersPage() {
           </div>
         </div>
 
-        {/* Datatable Scroll Container */}
         <div className="overflow-x-auto">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-2 bg-surface">
@@ -253,13 +248,13 @@ export default function CustomersPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-outline-variant/30 text-xs font-sans text-on-surface bg-surface">
+              <tbody className="divide-y divide-outline-variant/30 text-xs font-sans text-[#243447] bg-white">
                 {customers.map((c) => {
                   const stateClass =
                     c.state.toLowerCase() === 'active' || c.state.toLowerCase() === 'healthy'
                       ? 'bg-brand-accent/10 text-brand-accent border-brand-accent/30'
                       : c.state.toLowerCase() === 'monitor'
-                      ? 'bg-brand-gold/10 text-brand-gold border-brand-gold/30'
+                      ? 'bg-brand-gold/10 text-[#c8a96b] border-brand-gold/30'
                       : 'bg-error/10 text-error border-error/30';
 
                   return (
@@ -268,7 +263,7 @@ export default function CustomersPage() {
                       className="hover:bg-surface-container-low transition-colors cursor-pointer"
                       onClick={() => router.push(`/customer/${c.customer_id}`)}
                     >
-                      <td className="p-md font-semibold text-primary">
+                      <td className="p-md font-semibold text-[#0F766E]">
                         {c.customer_name || 'Anonymous Customer'}
                         <div className="text-[10px] text-outline font-mono mt-0.5">ID: {c.customer_id.slice(0, 8)}</div>
                       </td>
@@ -293,12 +288,11 @@ export default function CustomersPage() {
           )}
         </div>
 
-        {/* Server Pagination Panel */}
         <div className="p-md border-t border-outline-variant bg-surface flex justify-between items-center text-xs">
           <button
             onClick={() => setPage(page - 1)}
             disabled={!pagination.has_previous || isLoading}
-            className="px-3 py-1.5 border border-outline-variant rounded bg-surface hover:bg-surface-container disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-secondary cursor-pointer"
+            className="px-3 py-1.5 border border-outline-variant rounded bg-surface hover:bg-surface-container disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-[#243447] cursor-pointer"
           >
             Previous
           </button>
@@ -308,7 +302,7 @@ export default function CustomersPage() {
           <button
             onClick={() => setPage(page + 1)}
             disabled={!pagination.has_next || isLoading}
-            className="px-3 py-1.5 border border-outline-variant rounded bg-surface hover:bg-surface-container disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-secondary cursor-pointer"
+            className="px-3 py-1.5 border border-outline-variant rounded bg-surface hover:bg-surface-container disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-[#243447] cursor-pointer"
           >
             Next
           </button>
@@ -316,4 +310,123 @@ export default function CustomersPage() {
       </div>
     </div>
   );
+}
+
+// --- PUBLIC ENTERPRISE CASE STUDIES PAGE ---
+function PublicCustomers() {
+  const caseStudies = [
+    {
+      company: 'Standard Steel Castings Ltd.',
+      initials: 'SC',
+      industry: 'Heavy Manufacturing & Distribution',
+      metric: 'DSO -18.4 Days',
+      metricLabel: 'Working Capital Cycle Acceleration',
+      description: 'Econ-IQ synchronized our ERP ledgers and highlighted payment delays before our quarterly close, saving us millions in working capital by active automated credit terms adaptation.',
+      challenge: 'Average DSO exceeded 58 days. credit exposures across 120 regional distributor accounts were completely unmonitored.',
+      solution: 'Automated ledger analysis computes continuous payment scores, triggering proactive term modifications.',
+    },
+    {
+      company: 'Apex Logistics & Wholesale Supply',
+      initials: 'AL',
+      industry: 'Industrial Supply & Wholesale',
+      metric: '-32.5%',
+      metricLabel: 'Reduction in Credit Delinquency',
+      description: 'We replaced outdated manual credit checks with Econ-IQs live behavioral intelligence scores, dramatically dropping default rates in our wholesale channels.',
+      challenge: 'Manual credit reports were compiled monthly and missed live order surges and regional payment delays.',
+      solution: 'Real-time ingestion of invoice data updates customer trust and payment profiles on every order execution.',
+    },
+    {
+      company: 'Vohra-Dugal FMCG Corporation',
+      initials: 'VD',
+      industry: 'FMCG Distribution Network',
+      metric: '2.8x',
+      metricLabel: 'Increase in Collections Efficiency',
+      description: 'By prioritizing high-risk, high-exposure accounts based on active risk buckets rather than nominal invoice age, we maximized cash flow recovery rates.',
+      challenge: 'Our collections staff spent 80% of their time chasing small, low-risk invoices while massive exposures aged silently.',
+      solution: 'Stateful customer segmentation automatically queues outstanding accounts based on live liquidity stress flags.',
+    },
+    {
+      company: 'Metals Trading Alliance',
+      initials: 'MT',
+      industry: 'Commodities Trading & Logistics',
+      metric: '$4.2M',
+      metricLabel: 'Released Working Capital',
+      description: 'Within 90 days of deploying Econ-IQ, we identified and resolved hidden bottlenecks in our billing and dispute management workflows.',
+      challenge: 'Disputes over freight charges lingered for months, stalling payments and bloating total outstanding balances.',
+      solution: 'Consolidated commercial analytics matches invoices with delivery signals, raising dispute alerts instantly.',
+    }
+  ];
+
+  return (
+    <div className="space-y-24 py-16 px-6 lg:px-8 bg-[#FAF9F6] text-[#243447]">
+      {/* Header */}
+      <SectionHeader
+        tag="Case Studies"
+        title="Validated Business Outcomes"
+        description="Explore how leading industrial enterprise manufacturers, distributors, and wholesalers convert ledger signals into stateful liquidity improvements."
+      />
+
+      {/* Case Study Grid */}
+      <div className="max-w-[1280px] mx-auto">
+        <CaseStudyCards studies={caseStudies} />
+      </div>
+
+      {/* Business Transformation Summary */}
+      <section className="bg-white border border-[#E3E2DF] rounded-xl p-8 md:p-12 max-w-[1280px] mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="space-y-4">
+          <span className="text-[10px] font-bold text-[#0F766E] uppercase tracking-wider block">Methodology</span>
+          <h3 className="font-headline text-lg font-bold text-[#243447]">No Estimates, Just Ledgers</h3>
+          <p className="font-sans text-xs text-[#5E6266] leading-relaxed">
+            Econ-IQ does not rely on generic market indices or external credit databases. We perform transactional audit verification on your historical and current invoice registers to calculate precise behavioral indicators.
+          </p>
+        </div>
+        
+        <div className="space-y-4">
+          <span className="text-[10px] font-bold text-[#0F766E] uppercase tracking-wider block">Integrations</span>
+          <h3 className="font-headline text-lg font-bold text-[#243447]">Zero-Disruption Deployment</h3>
+          <p className="font-sans text-xs text-[#5E6266] leading-relaxed">
+            Our API connections connect with modern ERP platforms (SAP, Oracle, NetSuite) and flat-file exports in less than 72 hours, extracting data safely without impacting operational performance.
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <span className="text-[10px] font-bold text-[#0F766E] uppercase tracking-wider block">Security</span>
+          <h3 className="font-headline text-lg font-bold text-[#243447]">Enterprise Grade Security</h3>
+          <p className="font-sans text-xs text-[#5E6266] leading-relaxed">
+            Econ-IQ encrypts and hashes all ledger records at rest and in transit. Your proprietary commercial histories remain private to your organizational tenant and are never shared.
+          </p>
+        </div>
+      </section>
+
+      {/* Call to Action */}
+      <CTASection
+        title="Begin your cash flow optimization journey"
+        subtitle="Schedule an assessment session with our risk engineers to see how Econ-IQ can profile your outstanding exposures."
+        primaryText="Request Live Demo"
+        primaryLink="/contact?type=demo"
+        secondaryText="View Platform Specifications"
+        secondaryLink="/platform"
+      />
+    </div>
+  );
+}
+
+// --- MAIN WRAPPER COMPONENT ---
+export default function CustomersPage() {
+  const { isAuthenticated } = useAuthStore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center bg-[#FAF9F6]">
+        <div className="w-8 h-8 border-4 border-[#0F766E] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  return isAuthenticated ? <AuthenticatedCustomers /> : <PublicCustomers />;
 }
