@@ -32,7 +32,7 @@ export default function TermsPage() {
         <div className="space-y-2">
           <h3 className="font-headline text-base font-bold text-[#243447]">3. Decision Support Liability</h3>
           <p>
-            Econ-IQ provides predictive calculations, scores, and policy suggestions to support credit workflows. Final commercial choices (e.g. extending credit, adjusting default terms, collections actions) are made solely at your organization's discretion.
+            Econ-IQ provides predictive calculations, scores, and policy suggestions to support credit workflows. Final commercial choices (e.g. extending credit, adjusting default terms, collections actions) are made solely at your organization&apos;s discretion.
           </p>
         </div>
 

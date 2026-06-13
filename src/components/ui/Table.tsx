@@ -134,7 +134,7 @@ export default function Table<T>({
                     const alignment = col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left';
                     return (
                       <td key={col.key} className={`${paddingY} ${alignment}`}>
-                        {col.render ? col.render(row) : (row as any)[col.key]}
+                        {col.render ? col.render(row) : (row as Record<string, unknown>)[col.key] as React.ReactNode}
                       </td>
                     );
                   })}

@@ -4,6 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { UserService } from '@/services/user.service';
 import { useAuth } from '@/hooks/useAuth';
 import { User } from '@/types/auth';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import Select from '@/components/ui/Select';
+import Badge from '@/components/ui/Badge';
+import { Plus, UserMinus } from 'lucide-react';
 
 export default function UsersPage() {
   const { user: currentUser } = useAuth();
@@ -122,13 +127,14 @@ export default function UsersPage() {
           <div className="p-md border-b border-outline-variant bg-surface-container-low flex justify-between items-center">
             <h3 className="font-headline text-sm font-bold text-primary">Authorized Analysts</h3>
             {currentUser?.role === 'SUPER_ADMIN' && (
-              <button
+              <Button
                 onClick={() => setShowAddForm(!showAddForm)}
-                className="px-3 py-1 bg-[#0F766E] text-white text-xs font-semibold rounded hover:bg-[#0F766E]/90 transition-colors flex items-center gap-xs cursor-pointer"
+                variant="accent"
+                size="sm"
+                icon={Plus}
               >
-                <span className="material-symbols-outlined text-[16px]">add</span>
                 New Analyst
-              </button>
+              </Button>
             )}
           </div>
 
@@ -141,42 +147,34 @@ export default function UsersPage() {
                   {addMsg}
                 </div>
               )}
-              <div className="space-y-1">
-                <label className="text-outline">Full Name</label>
-                <input
-                  type="text"
-                  required
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full bg-surface border border-outline-variant px-3 py-1.5 rounded"
-                  placeholder="e.g. John Doe"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-outline">Email Address</label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-surface border border-outline-variant px-3 py-1.5 rounded"
-                  placeholder="analyst@econiq.com"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-outline">User Role</label>
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  className="w-full bg-surface border border-outline-variant px-3 py-1.5 rounded"
-                >
-                  <option value="ANALYST">ANALYST</option>
-                  <option value="SUPER_ADMIN">SUPER ADMIN</option>
-                </select>
-              </div>
-              <button type="submit" className="px-4 py-2 bg-brand-accent text-white font-semibold rounded hover:brightness-110">
+              <Input
+                label="Full Name"
+                type="text"
+                required
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="e.g. John Doe"
+              />
+              <Input
+                label="Email Address"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="analyst@econiq.com"
+              />
+              <Select
+                label="User Role"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                options={[
+                  { value: 'ANALYST', label: 'ANALYST' },
+                  { value: 'SUPER_ADMIN', label: 'SUPER ADMIN' },
+                ]}
+              />
+              <Button type="submit" variant="accent" size="sm">
                 Create Account
-              </button>
+              </Button>
             </form>
           )}
 
@@ -195,19 +193,21 @@ export default function UsersPage() {
                     <span className="text-[10px] text-outline">{u.email}</span>
                   </div>
                   <div className="flex items-center gap-md">
-                    <span className={`px-2 py-0.5 text-[9px] font-bold rounded border uppercase ${
-                      u.is_active ? 'text-brand-accent bg-brand-accent/10 border-brand-accent/30' : 'text-error bg-error/10 border-error/30'
-                    }`}>
+                    <Badge
+                      variant={u.is_active ? 'accent' : 'danger'}
+                      size="sm"
+                    >
                       {u.role.replace('_', ' ')}
-                    </span>
+                    </Badge>
                     {currentUser?.role === 'SUPER_ADMIN' && u.id !== currentUser.id && u.is_active && (
-                      <button
+                      <Button
                         onClick={() => handleDeactivate(u.id)}
-                        className="p-1 hover:text-error transition-colors flex items-center justify-center cursor-pointer"
+                        variant="secondary"
+                        size="sm"
+                        icon={UserMinus}
                         title="Deactivate Account"
-                      >
-                        <span className="material-symbols-outlined text-[18px]">person_remove</span>
-                      </button>
+                        className="w-8 h-8 p-0"
+                      />
                     )}
                   </div>
                 </div>

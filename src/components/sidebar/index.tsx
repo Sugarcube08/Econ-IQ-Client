@@ -14,7 +14,6 @@ import {
   Key,
   Settings,
   LogOut,
-  ChevronUp,
   ChevronsUpDown,
   Plus
 } from 'lucide-react';

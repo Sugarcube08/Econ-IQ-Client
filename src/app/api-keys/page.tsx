@@ -3,7 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { ApiKeyService } from '@/services/apikey.service';
 import { APIKey } from '@/types/auth';
-import EmptyState from '@/components/EmptyState';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import Badge from '@/components/ui/Badge';
+import EmptyState from '@/components/ui/EmptyState';
+import { Key, Ban } from 'lucide-react';
 
 export default function ApiKeysPage() {
   const [keys, setKeys] = useState<APIKey[]>([]);
@@ -120,17 +124,14 @@ export default function ApiKeysPage() {
           )}
 
           <form onSubmit={handleCreate} className="space-y-md text-xs font-sans">
-            <div className="space-y-1">
-              <label className="text-outline">Key Description Name</label>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. ERP Ingestion Service"
-                className="w-full bg-surface border border-outline-variant px-3 py-1.5 rounded"
-              />
-            </div>
+            <Input
+              label="Key Description Name"
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. ERP Ingestion Service"
+            />
             
             <div className="space-y-sm">
               <label className="text-outline uppercase tracking-wider block">Authorized Scopes</label>
@@ -156,9 +157,9 @@ export default function ApiKeysPage() {
               </label>
             </div>
 
-            <button type="submit" className="w-full h-10 bg-[#0F766E] text-white font-bold rounded hover:brightness-110 cursor-pointer">
+            <Button type="submit" variant="accent" className="w-full">
               Generate Key
-            </button>
+            </Button>
           </form>
         </div>
 
@@ -175,7 +176,7 @@ export default function ApiKeysPage() {
           ) : keys.length === 0 ? (
             <div className="p-lg">
               <EmptyState
-                icon="key"
+                icon={Key}
                 title="No API Credentials"
                 description="Issue authorization keys to authorize your ERP ledgers or trigger auto-checkouts."
               />
@@ -193,19 +194,21 @@ export default function ApiKeysPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-md">
-                    <span className={`px-2 py-0.5 text-[9px] font-bold rounded border uppercase ${
-                      k.is_active ? 'text-brand-accent bg-brand-accent/10 border-brand-accent/30' : 'text-error bg-error/10 border-error/30'
-                    }`}>
+                    <Badge
+                      variant={k.is_active ? 'accent' : 'danger'}
+                      size="sm"
+                    >
                       {k.is_active ? 'Active' : 'Revoked'}
-                    </span>
+                    </Badge>
                     {k.is_active && (
-                      <button
+                      <Button
                         onClick={() => handleRevoke(k.id)}
-                        className="p-1 hover:text-error transition-colors flex items-center justify-center cursor-pointer"
+                        variant="secondary"
+                        size="sm"
+                        icon={Ban}
                         title="Revoke Access"
-                      >
-                        <span className="material-symbols-outlined text-[18px]">block</span>
-                      </button>
+                        className="w-8 h-8 p-0 text-red-600 hover:text-red-700 hover:border-red-300"
+                      />
                     )}
                   </div>
                 </div>

@@ -30,7 +30,7 @@ export default function DashboardPage() {
   const [isSimulatingSync, setIsSimulatingSync] = useState(false);
 
   // Queries (enabled only if firstSync is complete to avoid uninitialized data calls)
-  const { data: overview, isLoading: isOverviewLoading, isError: isOverviewError } = useDashboardOverview();
+  const { data: overview, isLoading: isOverviewLoading } = useDashboardOverview();
   const { commercialFlow, agingDistribution, stateDistribution, isLoading: isChartsLoading } = useDashboardCharts();
   const { deteriorating, improving, highRisk, isLoading: isQueuesLoading } = useDashboardQueues();
 
@@ -479,7 +479,7 @@ export default function DashboardPage() {
           </div>
           <div className="p-md lg:p-lg flex-1 flex flex-col justify-around gap-sm">
             {Object.keys(stateData).length > 0 ? (
-              Object.entries(stateData).map(([state, val]: [string, any]) => {
+              Object.entries(stateData).map(([state, val]: [string, { count: number; percentage: number }]) => {
                 const percentage = val.percentage;
                 let colorClass = 'bg-[#0F766E]';
                 if (state.toLowerCase() === 'monitor') colorClass = 'bg-[#c8a96b]';

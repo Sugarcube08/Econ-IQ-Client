@@ -116,7 +116,7 @@ export default function InviteTeamPage() {
               <label className="font-bold text-[#5E6266] uppercase block">Assign Authority Role</label>
               <select
                 value={role}
-                onChange={(e) => setRole(e.target.value as any)}
+                onChange={(e) => setRole(e.target.value as 'Admin' | 'Manager' | 'Analyst')}
                 className="w-full bg-[#FAF9F6] border border-[#E3E2DF] rounded p-3 text-sm focus:outline-none focus:border-[#0F766E] text-[#243447]"
               >
                 <option value="Analyst">Risk Analyst (Read-only ledger access)</option>

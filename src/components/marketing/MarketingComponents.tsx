@@ -177,7 +177,7 @@ export function CaseStudyCards({ studies }: CaseStudyCardsProps) {
             </div>
             
             <p className="font-sans text-xs text-[#5E6266] leading-relaxed italic border-l-2 border-[#0F766E] pl-3">
-              "{study.description}"
+              &ldquo;{study.description}&rdquo;
             </p>
 
             <div className="grid grid-cols-2 gap-4 pt-2 text-[11px] border-t border-[#E3E2DF]/60">

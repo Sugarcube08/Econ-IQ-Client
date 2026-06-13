@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { SectionHeader, CTASection } from '@/components/marketing/MarketingComponents';
 
 export default function PlatformPage() {
@@ -133,7 +132,7 @@ export default function PlatformPage() {
             <div className="space-y-1">
               <label className="text-[9px] text-[#5E6266] uppercase block font-bold">Filter Dataset</label>
               <div className="text-xs bg-[#FAF9F6] border border-[#E3E2DF] p-2 rounded text-[#243447] font-mono">
-                SELECT * FROM ledger WHERE risk_state = 'liquidity_stress'
+                SELECT * FROM ledger WHERE risk_state = &apos;liquidity_stress&apos;
               </div>
             </div>
             <div className="flex gap-2">
@@ -232,7 +231,7 @@ export default function PlatformPage() {
               return (
                 <button
                   key={m.id}
-                  onClick={() => setActiveModule(m.id as any)}
+                  onClick={() => setActiveModule(m.id as 'dashboard' | 'intelligence' | 'analytics' | 'reporting' | 'api' | 'security')}
                   className={`w-full p-4 rounded-lg text-left border transition-all duration-300 flex items-center justify-between cursor-pointer ${
                     isActive
                       ? 'bg-white border-[#0F766E] shadow-sm'

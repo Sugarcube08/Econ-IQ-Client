@@ -32,7 +32,7 @@ export default function AboutPage() {
         <div className="bg-[#243447] text-white p-8 md:p-12 rounded-xl border border-[#34485E] space-y-6">
           <span className="text-[10px] text-[#80d5cb] uppercase tracking-wider font-bold block">Our Belief</span>
           <blockquote className="font-headline text-lg italic text-[#FAF9F6] leading-relaxed">
-            "Ledgers represent actual commercial behavior. We believe corporate credit lines should be driven by continuous buyer transaction consistency, not static bureau reports."
+            &ldquo;Ledgers represent actual commercial behavior. We believe corporate credit lines should be driven by continuous buyer transaction consistency, not static bureau reports.&rdquo;
           </blockquote>
           <div className="h-px bg-[#34485E]"></div>
           <div className="text-xs text-[#9EADB3]">

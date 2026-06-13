@@ -78,7 +78,7 @@ export default function HomePage() {
             <span className="material-symbols-outlined text-[#ba1a1a] text-[32px]">bar_chart</span>
             <h3 className="font-headline text-sm font-bold text-[#243447]">Outstanding Exposure</h3>
             <p className="font-sans text-xs text-[#5E6266] leading-relaxed">
-              A company's total outstanding balance accumulates silently across sales segments, reducing cash flow predictability.
+              A company&apos;s total outstanding balance accumulates silently across sales segments, reducing cash flow predictability.
             </p>
           </div>
 

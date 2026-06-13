@@ -44,6 +44,7 @@ export default function TopBar({ title }: { title?: string }) {
 
         {/* Profile */}
         <div className="flex items-center gap-sm">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             alt="Executive Profile"
             className="w-8 h-8 rounded-full border border-outline-variant"

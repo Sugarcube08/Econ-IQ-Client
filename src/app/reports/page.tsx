@@ -2,6 +2,10 @@
 
 import React, { useState } from 'react';
 import { ReportService } from '@/services/report.service';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import Select from '@/components/ui/Select';
+import { Download } from 'lucide-react';
 
 export default function ReportsPage() {
   const [segment, setSegment] = useState('');
@@ -37,7 +41,7 @@ export default function ReportsPage() {
         </p>
       </div>
 
-      <div className="bg-surface p-lg rounded-xl border border-outline-variant shadow-sm space-y-md">
+      <div className="bg-surface p-lg rounded-xl border border-outline-variant shadow-sm space-y-md bg-white">
         <h3 className="font-headline text-base font-bold text-primary">Export Custom Ledger Matrix</h3>
         
         {exportMessage && (
@@ -49,44 +53,39 @@ export default function ReportsPage() {
         )}
 
         <form onSubmit={handleExport} className="space-y-md">
-          {/* Segment Selector */}
-          <div className="space-y-xs">
-            <label className="font-sans text-xs font-semibold text-outline uppercase">Target Behavioral Segment</label>
-            <select
-              value={segment}
-              onChange={(e) => setSegment(e.target.value)}
-              className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-brand-accent"
-            >
-              <option value="">All Segment States</option>
-              <option value="active">Active</option>
-              <option value="declining">Declining</option>
-              <option value="healthy">Healthy</option>
-              <option value="monitor">Monitor</option>
-              <option value="contract">Contract</option>
-              <option value="liquidity_stress">Liquidity Stress</option>
-            </select>
-          </div>
+          <Select
+            label="Target Behavioral Segment"
+            value={segment}
+            onChange={(e) => setSegment(e.target.value)}
+            options={[
+              { value: '', label: 'All Segment States' },
+              { value: 'active', label: 'Active' },
+              { value: 'declining', label: 'Declining' },
+              { value: 'healthy', label: 'Healthy' },
+              { value: 'monitor', label: 'Monitor' },
+              { value: 'contract', label: 'Contract' },
+              { value: 'liquidity_stress', label: 'Liquidity Stress' },
+            ]}
+          />
 
-          {/* Search Scope */}
-          <div className="space-y-xs">
-            <label className="font-sans text-xs font-semibold text-outline uppercase">Fuzzy Search Filter (Optional)</label>
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="e.g. city names or business aliases..."
-              className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-brand-accent"
-            />
-          </div>
+          <Input
+            label="Fuzzy Search Filter (Optional)"
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="e.g. city names or business aliases..."
+          />
 
-          <button
+          <Button
             type="submit"
-            disabled={isExporting}
-            className="w-full h-12 bg-[#0F766E] text-white font-sans font-bold text-xs rounded hover:bg-[#0F766E]/90 transition-colors shadow-sm flex items-center justify-center gap-xs cursor-pointer disabled:opacity-50"
+            isLoading={isExporting}
+            icon={Download}
+            variant="accent"
+            size="lg"
+            className="w-full"
           >
-            <span className="material-symbols-outlined text-[18px]">cloud_download</span>
             {isExporting ? 'Compiling CSV Stream...' : 'Compile & Export Ledger'}
-          </button>
+          </Button>
         </form>
       </div>
     </div>

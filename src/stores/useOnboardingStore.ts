@@ -103,7 +103,7 @@ const defaultSecuritySetup: SecuritySetup = {
 
 export const useOnboardingStore = create<OnboardingState>((set, get) => {
   // Safe retrieval from localStorage in client environment
-  let savedState: any = null;
+  let savedState: unknown = null;
   if (typeof window !== 'undefined') {
     const raw = localStorage.getItem('econ_onboarding_state');
     if (raw) {
@@ -115,7 +115,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => {
     }
   }
 
-  const initialState = savedState || {
+  const initialState = (savedState as OnboardingState | null) || {
     currentStep: 1,
     orgProfile: defaultOrgProfile,
     commercialConfig: defaultCommercialConfig,
