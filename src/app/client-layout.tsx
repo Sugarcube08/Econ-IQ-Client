@@ -62,43 +62,39 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     }
   }, [isAuthenticated, isOnboarded, isPublicRoute, pathname, router]);
 
-  // Adjust document theme classes based on route context
+  // Adjust document theme classes based on route context - defaults to light-first
   useEffect(() => {
-    if (isLoginRoute) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isLoginRoute]);
+    document.documentElement.classList.remove('dark');
+  }, []);
 
   // Render minimal layout for login screen
   if (isLoginRoute) {
-    return <div className="dark bg-surface text-on-surface min-h-screen">{children}</div>;
+    return <div className="bg-background text-on-background min-h-screen">{children}</div>;
   }
 
   // Render simplified setup wizard layout
   if (pathname === '/onboarding') {
     return (
-      <div className="bg-[#FAF9F6] text-[#243447] min-h-screen flex flex-col font-sans">
-        <header className="h-20 border-b border-[#E3E2DF] flex items-center justify-between px-8 bg-white/80 backdrop-blur-md sticky top-0 z-50">
+      <div className="bg-background text-on-background min-h-screen flex flex-col font-sans">
+        <header className="h-20 border-b border-outline-variant flex items-center justify-between px-8 bg-surface/80 backdrop-blur-md sticky top-0 z-50">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-[#0F766E] rounded flex items-center justify-center text-white font-bold font-headline text-md shadow-sm">
+            <div className="w-8 h-8 bg-brand-accent rounded flex items-center justify-center text-on-primary font-bold font-headline text-md shadow-sm">
               EQ
             </div>
-            <span className="font-headline text-lg font-extrabold text-[#243447] tracking-tight">Econ-IQ Onboarding</span>
+            <span className="font-headline text-lg font-extrabold text-on-surface tracking-tight">Econ-IQ Onboarding</span>
           </div>
           <button
             onClick={() => {
               useAuthStore.getState().clearSession();
               router.push('/login');
             }}
-            className="text-xs font-semibold text-[#B91C1C] hover:underline cursor-pointer flex items-center gap-1.5 bg-transparent border-0"
+            className="text-xs font-semibold text-danger hover:underline cursor-pointer flex items-center gap-1.5 bg-transparent border-0"
           >
-            <LogOut className="w-4 h-4 text-[#B91C1C]" />
+            <LogOut className="w-4 h-4 text-danger" />
             Exit Setup
           </button>
         </header>
-        <main className="flex-grow flex items-center justify-center p-md md:p-lg bg-[#FAF9F6]">
+        <main className="flex-grow flex items-center justify-center p-md md:p-lg bg-background">
           {children}
         </main>
       </div>
@@ -109,10 +105,10 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   if (isInternalShell) {
     if (!isAuthenticated) {
       return (
-        <div className="min-h-screen bg-[#faf9f6] flex items-center justify-center">
+        <div className="min-h-screen bg-background flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-8 h-8 border-4 border-[#0f766e] border-t-transparent rounded-full animate-spin"></div>
-            <p className="font-sans text-sm text-[#75777a] tracking-wide">Securing connection...</p>
+            <div className="w-8 h-8 border-4 border-brand-accent border-t-transparent rounded-full animate-spin"></div>
+            <p className="font-sans text-sm text-outline tracking-wide">Securing connection...</p>
           </div>
         </div>
       );
@@ -151,7 +147,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   // Otherwise, render the public site layout with Navbar and Footer
   return (
-    <div className="bg-[#FAF9F6] text-[#243447] min-h-screen flex flex-col">
+    <div className="bg-background text-on-background min-h-screen flex flex-col">
       <PublicNavbar />
       <main className="flex-grow">
         {children}

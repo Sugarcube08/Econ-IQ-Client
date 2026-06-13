@@ -25,7 +25,7 @@ export function Card({
 
   return (
     <div
-      className={`bg-white border border-[#E3E2DF] rounded-xl p-6 ${shadows[elevation]} ${hoverStyle} ${className}`}
+      className={`bg-surface border border-outline-variant rounded-xl p-6 ${shadows[elevation]} ${hoverStyle} ${className}`}
       {...props}
     >
       {children}
@@ -48,15 +48,15 @@ export function CardHeader({
 }: CardHeaderProps) {
   return (
     <div
-      className={`flex items-start justify-between gap-4 border-b border-[#E3E2DF]/60 pb-4 mb-4 ${className}`}
+      className={`flex items-start justify-between gap-4 border-b border-outline-variant/60 pb-4 mb-4 ${className}`}
       {...props}
     >
       <div className="space-y-1">
-        <h3 className="font-headline text-sm font-bold text-[#111827] uppercase tracking-wider">
+        <h3 className="font-headline text-sm font-bold text-on-surface uppercase tracking-wider">
           {title}
         </h3>
         {subtitle && (
-          <p className="font-sans text-xs text-[#6B7280] leading-relaxed">
+          <p className="font-sans text-xs text-outline leading-relaxed">
             {subtitle}
           </p>
         )}
@@ -70,7 +70,7 @@ type CardContentProps = React.HTMLAttributes<HTMLDivElement>;
 
 export function CardContent({ children, className = '', ...props }: CardContentProps) {
   return (
-    <div className={`font-sans text-xs sm:text-sm text-[#6B7280] leading-relaxed space-y-4 ${className}`} {...props}>
+    <div className={`font-sans text-xs sm:text-sm text-outline leading-relaxed space-y-4 ${className}`} {...props}>
       {children}
     </div>
   );
@@ -81,7 +81,7 @@ type CardFooterProps = React.HTMLAttributes<HTMLDivElement>;
 export function CardFooter({ children, className = '', ...props }: CardFooterProps) {
   return (
     <div
-      className={`flex items-center justify-between gap-4 border-t border-[#E3E2DF]/60 pt-4 mt-4 ${className}`}
+      className={`flex items-center justify-between gap-4 border-t border-outline-variant/60 pt-4 mt-4 ${className}`}
       {...props}
     >
       {children}

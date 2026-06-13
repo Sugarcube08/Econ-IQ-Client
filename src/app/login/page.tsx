@@ -134,10 +134,10 @@ export default function LoginPage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col font-sans overflow-hidden bg-surface text-on-surface">
+    <div className="min-h-screen flex flex-col font-sans overflow-hidden bg-background text-on-background">
       {/* Branding Header */}
       <header className="relative z-10 w-full px-margin-desktop h-24 flex items-center justify-center md:justify-start">
-        <span className="font-headline text-3xl font-extrabold text-white tracking-tight">Econ-IQ</span>
+        <span className="font-headline text-3xl font-extrabold text-primary tracking-tight">Econ-IQ</span>
       </header>
 
       {/* Main Login Form Container */}
@@ -145,11 +145,11 @@ export default function LoginPage() {
         <div className="w-full max-w-[440px] transition-all duration-700">
           <div
             ref={cardRef}
-            className="bg-surface-container p-10 md:p-12 rounded-xl border border-outline-variant transition-all duration-500 shadow-[0_0_40px_-10px_rgba(15,118,110,0.15)]"
+            className="bg-surface p-10 md:p-12 rounded-xl border border-outline-variant transition-all duration-500 shadow-[0_0_40px_-10px_rgba(15,118,110,0.15)]"
           >
             <div className="mb-8 space-y-2">
-              <h1 className="font-headline text-2xl font-bold text-white">Command Center Access</h1>
-              <p className="font-sans text-sm text-on-surface-variant">
+              <h1 className="font-headline text-2xl font-bold text-on-surface">Command Center Access</h1>
+              <p className="font-sans text-sm text-outline">
                 {step === 'email'
                   ? 'Enter your enterprise email to receive an access token.'
                   : 'Enter the verification token sent to your email.'}
@@ -165,14 +165,14 @@ export default function LoginPage() {
             {step === 'email' ? (
               <form onSubmit={handleSubmit(onEmailSubmit)} className="space-y-6">
                 <div className="space-y-2">
-                  <label className="font-sans text-xs text-on-surface-variant block uppercase tracking-wider font-semibold" htmlFor="email">
+                  <label className="font-sans text-xs text-outline block uppercase tracking-wider font-semibold" htmlFor="email">
                     Corporate Email
                   </label>
                   <div className="relative group">
                     <input
                       {...register('email')}
                       id="email"
-                      className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 text-white font-sans text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-outline"
+                      className="w-full bg-background border border-outline-variant rounded-lg px-4 py-3 text-on-surface font-sans text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-outline"
                       placeholder="name@company.com"
                       required
                       type="email"
@@ -189,14 +189,14 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={requestOtp.isPending}
-                  className="w-full bg-primary-container text-on-primary-container font-headline font-semibold text-base h-14 flex items-center justify-center rounded-lg hover:brightness-110 active:scale-[0.98] transition-all duration-200 cursor-pointer disabled:opacity-50"
+                  className="w-full bg-[#161A1D] text-white hover:bg-[#161A1D]/90 font-headline font-semibold text-base h-14 flex items-center justify-center rounded-lg hover:brightness-110 active:scale-[0.98] transition-all duration-200 cursor-pointer disabled:opacity-50"
                 >
                   {requestOtp.isPending ? 'Sending...' : 'Request Access Token'}
                 </button>
 
                 <div className="pt-4 flex items-center justify-center gap-2 border-t border-outline-variant/30">
                   <span className="material-symbols-outlined text-primary text-[18px]">verified_user</span>
-                  <span className="font-sans text-xs text-on-surface-variant">
+                  <span className="font-sans text-xs text-outline">
                     End-to-End Encrypted Authentication
                   </span>
                 </div>
@@ -204,7 +204,7 @@ export default function LoginPage() {
             ) : (
               <form onSubmit={handleOtpSubmit} className="space-y-6">
                 <div className="space-y-2">
-                  <label className="font-sans text-xs text-on-surface-variant block uppercase tracking-wider font-semibold">
+                  <label className="font-sans text-xs text-outline block uppercase tracking-wider font-semibold">
                     Verification Token
                   </label>
                   <div className="flex justify-between gap-2">
@@ -220,7 +220,7 @@ export default function LoginPage() {
                         onChange={(e) => handleOtpChange(index, e.target.value)}
                         onKeyDown={(e) => handleOtpKeyDown(index, e)}
                         onPaste={index === 0 ? handleOtpPaste : undefined}
-                        className="w-12 h-14 bg-surface-container-lowest border border-outline-variant rounded-lg text-center text-xl font-headline font-bold text-primary focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                        className="w-12 h-14 bg-background border border-outline-variant rounded-lg text-center text-xl font-headline font-bold text-on-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                       />
                     ))}
                   </div>
@@ -229,7 +229,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={verifyOtp.isPending}
-                  className="w-full bg-primary-container text-on-primary-container font-headline font-semibold text-base h-14 flex items-center justify-center rounded-lg hover:brightness-110 active:scale-[0.98] transition-all duration-200 cursor-pointer disabled:opacity-50"
+                  className="w-full bg-[#161A1D] text-white hover:bg-[#161A1D]/90 font-headline font-semibold text-base h-14 flex items-center justify-center rounded-lg hover:brightness-110 active:scale-[0.98] transition-all duration-200 cursor-pointer disabled:opacity-50"
                 >
                   {verifyOtp.isPending ? 'Validating...' : 'Validate Identity'}
                 </button>
@@ -241,7 +241,7 @@ export default function LoginPage() {
                     setOtpValues(Array(6).fill(''));
                     setErrorMsg(null);
                   }}
-                  className="w-full text-on-surface-variant font-sans text-xs hover:text-white transition-colors cursor-pointer"
+                  className="w-full text-outline font-sans text-xs hover:text-primary transition-colors cursor-pointer"
                 >
                   Did not receive a token? Try again
                 </button>
@@ -256,14 +256,14 @@ export default function LoginPage() {
       </main>
 
       {/* Transactional Footer */}
-      <footer className="relative z-10 w-full py-6 px-margin-desktop border-t border-outline-variant flex flex-col md:flex-row justify-between items-center gap-4 bg-surface-container-lowest">
-        <div className="font-sans text-xs text-on-surface-variant">
+      <footer className="relative z-10 w-full py-6 px-margin-desktop border-t border-outline-variant flex flex-col md:flex-row justify-between items-center gap-4 bg-surface">
+        <div className="font-sans text-xs text-outline">
           © 2026 Econ-IQ. Architectural Intelligence for Global B2B Networks.
         </div>
         <div className="flex gap-6">
-          <a className="font-sans text-xs text-on-surface-variant hover:text-primary transition-colors" href="#">Privacy Policy</a>
-          <a className="font-sans text-xs text-on-surface-variant hover:text-primary transition-colors" href="#">Security Standards</a>
-          <a className="font-sans text-xs text-on-surface-variant hover:text-primary transition-colors" href="#">Support Portal</a>
+          <a className="font-sans text-xs text-outline hover:text-primary transition-colors" href="#">Privacy Policy</a>
+          <a className="font-sans text-xs text-outline hover:text-primary transition-colors" href="#">Security Standards</a>
+          <a className="font-sans text-xs text-outline hover:text-primary transition-colors" href="#">Support Portal</a>
         </div>
       </footer>
     </div>

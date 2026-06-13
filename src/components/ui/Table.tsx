@@ -61,12 +61,12 @@ export default function Table<T>({
   };
 
   return (
-    <div className="bg-white rounded-xl border border-[#E3E2DF] shadow-[0_1px_3px_rgba(0,0,0,0.05)] overflow-hidden flex flex-col w-full font-sans text-xs">
+    <div className="bg-surface rounded-xl border border-outline-variant shadow-[0_1px_3px_rgba(0,0,0,0.05)] overflow-hidden flex flex-col w-full font-sans text-xs">
       
       {/* Scrollable grid viewport */}
       <div className="overflow-x-auto w-full">
         <table className="w-full text-left border-collapse min-w-[700px]">
-          <thead className="bg-[#F8F7F4] border-b border-[#E3E2DF] text-[10px] font-bold text-[#6B7280] uppercase tracking-wider">
+          <thead className="bg-background border-b border-outline-variant text-[10px] font-bold text-outline uppercase tracking-wider">
             <tr>
               {columns.map((col) => {
                 const isSorted = sortBy === col.key;
@@ -76,7 +76,7 @@ export default function Table<T>({
                     key={col.key}
                     onClick={() => handleHeaderClick(col)}
                     className={`py-3.5 px-6 font-bold transition-colors ${alignment} ${
-                      col.sortable ? 'cursor-pointer hover:text-[#111827] select-none' : ''
+                      col.sortable ? 'cursor-pointer hover:text-on-surface select-none' : ''
                     }`}
                   >
                     <div className={`flex items-center gap-1 ${
@@ -87,12 +87,12 @@ export default function Table<T>({
                         <span className="shrink-0">
                           {isSorted ? (
                             sortOrder === 'asc' ? (
-                              <ChevronUp className="w-3.5 h-3.5 text-[#0F766E]" />
+                              <ChevronUp className="w-3.5 h-3.5 text-brand-accent" />
                             ) : (
-                              <ChevronDown className="w-3.5 h-3.5 text-[#0F766E]" />
+                              <ChevronDown className="w-3.5 h-3.5 text-brand-accent" />
                             )
                           ) : (
-                            <ChevronsUpDown className="w-3.5 h-3.5 text-[#6B7280]/60" />
+                            <ChevronsUpDown className="w-3.5 h-3.5 text-outline/60" />
                           )}
                         </span>
                       )}
@@ -102,25 +102,25 @@ export default function Table<T>({
               })}
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#E3E2DF]/40 text-[#111827] bg-white">
+          <tbody className="divide-y divide-outline-variant/40 text-on-surface bg-surface">
             {isLoading ? (
               <tr>
-                <td colSpan={columns.length} className="py-20 text-center text-[#6B7280]">
+                <td colSpan={columns.length} className="py-20 text-center text-outline">
                   <div className="flex flex-col items-center justify-center gap-2">
-                    <Loader2 className="w-6 h-6 animate-spin text-[#0F766E]" />
+                    <Loader2 className="w-6 h-6 animate-spin text-brand-accent" />
                     <span>Fetching database records...</span>
                   </div>
                 </td>
               </tr>
             ) : isError ? (
               <tr>
-                <td colSpan={columns.length} className="py-16 text-center text-[#B91C1C] font-semibold bg-[#B91C1C]/5">
+                <td colSpan={columns.length} className="py-16 text-center text-error font-semibold bg-error/5">
                   {errorMessage}
                 </td>
               </tr>
             ) : data.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="py-16 text-center text-[#6B7280]">
+                <td colSpan={columns.length} className="py-16 text-center text-outline">
                   No records matching target specifications.
                 </td>
               </tr>
@@ -128,7 +128,7 @@ export default function Table<T>({
               data.map((row, idx) => (
                 <tr
                   key={idx}
-                  className="hover:bg-[#F8F7F4]/50 transition-colors"
+                  className="hover:bg-background/50 transition-colors"
                 >
                   {columns.map((col) => {
                     const alignment = col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left';
@@ -147,24 +147,24 @@ export default function Table<T>({
 
       {/* Pagination Panel (only rendered if page variables exist) */}
       {page !== undefined && totalPages !== undefined && onPageChange && (
-        <div className="p-4 border-t border-[#E3E2DF] bg-white flex justify-between items-center text-xs">
+        <div className="p-4 border-t border-outline-variant bg-surface flex justify-between items-center text-xs">
           <button
             onClick={() => onPageChange(page - 1)}
             disabled={!hasPrevious || isLoading}
-            className="px-3 py-1.5 border border-[#E3E2DF] rounded hover:bg-[#F8F7F4] transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-[#243447] flex items-center gap-1 cursor-pointer bg-white"
+            className="px-3 py-1.5 border border-outline-variant rounded hover:bg-background transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-secondary flex items-center gap-1 cursor-pointer bg-surface"
           >
             <ChevronLeft className="w-4 h-4 shrink-0" />
             Previous
           </button>
           
-          <span className="text-[#6B7280]">
-            Page <strong className="text-[#111827]">{page}</strong> of <strong className="text-[#111827]">{totalPages}</strong>
+          <span className="text-outline">
+            Page <strong className="text-on-surface">{page}</strong> of <strong className="text-on-surface">{totalPages}</strong>
           </span>
 
           <button
             onClick={() => onPageChange(page + 1)}
             disabled={!hasNext || isLoading}
-            className="px-3 py-1.5 border border-[#E3E2DF] rounded hover:bg-[#F8F7F4] transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-[#243447] flex items-center gap-1 cursor-pointer bg-white"
+            className="px-3 py-1.5 border border-outline-variant rounded hover:bg-background transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-secondary flex items-center gap-1 cursor-pointer bg-surface"
           >
             Next
             <ChevronRight className="w-4 h-4 shrink-0" />

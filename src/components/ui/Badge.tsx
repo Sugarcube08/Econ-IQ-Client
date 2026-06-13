@@ -18,13 +18,13 @@ export default function Badge({
   const baseStyle = 'inline-flex items-center font-sans font-bold uppercase tracking-wider rounded-full border';
 
   const variants = {
-    primary: 'bg-[#161A1D]/10 border-[#161A1D]/30 text-[#161A1D]',
-    secondary: 'bg-[#243447]/10 border-[#243447]/30 text-[#243447]',
-    accent: 'bg-[#0F766E]/10 border-[#0F766E]/30 text-[#0F766E]',
-    success: 'bg-[#2E7D32]/10 border-[#2E7D32]/30 text-[#2E7D32]',
-    warning: 'bg-[#B7791F]/10 border-[#B7791F]/30 text-[#B7791F]',
-    danger: 'bg-[#B91C1C]/10 border-[#B91C1C]/30 text-[#B91C1C]',
-    info: 'bg-[#6B7280]/10 border-[#6B7280]/30 text-[#6B7280]'
+    primary: 'bg-primary/10 border-primary/30 text-primary',
+    secondary: 'bg-secondary/10 border-secondary/30 text-secondary',
+    accent: 'bg-brand-accent/10 border-brand-accent/30 text-brand-accent',
+    success: 'bg-success/10 border-success/30 text-success',
+    warning: 'bg-warning/10 border-warning/30 text-warning',
+    danger: 'bg-danger/10 border-danger/30 text-danger',
+    info: 'bg-outline/10 border-outline/30 text-outline'
   };
 
   const sizes = {

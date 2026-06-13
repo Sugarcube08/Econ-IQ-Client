@@ -14,7 +14,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className="space-y-1.5 w-full text-xs font-sans">
         {label && (
-          <label htmlFor={id} className="font-bold text-[#6B7280] uppercase tracking-wider block">
+          <label htmlFor={id} className="font-bold text-outline uppercase tracking-wider block">
             {label}
           </label>
         )}
@@ -22,8 +22,8 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           <select
             id={id}
             ref={ref}
-            className={`w-full bg-[#F8F7F4] border rounded-lg px-3.5 py-2.5 text-xs text-[#111827] focus:outline-none focus:ring-1 focus:ring-[#0F766E]/40 transition-all ${
-              error ? 'border-[#B91C1C] focus:ring-[#B91C1C]/20' : 'border-[#E3E2DF] focus:border-[#0F766E]'
+            className={`w-full bg-background border rounded-lg px-3.5 py-2.5 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-brand-accent/20 transition-all ${
+              error ? 'border-error focus:ring-error/20' : 'border-outline-variant focus:border-brand-accent'
             } ${className}`}
             {...props}
           >
@@ -35,9 +35,9 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           </select>
         </div>
         {error ? (
-          <p className="text-[#B91C1C] text-[10px] font-semibold">{error}</p>
+          <p className="text-error text-[10px] font-semibold">{error}</p>
         ) : helperText ? (
-          <p className="text-[#6B7280] text-[10px]">{helperText}</p>
+          <p className="text-outline text-[10px]">{helperText}</p>
         ) : null}
       </div>
     );
