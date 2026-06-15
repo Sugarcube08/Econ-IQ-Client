@@ -5,6 +5,7 @@ export interface DashboardOverview {
   outstanding_exposure: number;
   overdue_exposure?: number;
   health_index: number;
+  last_data_date?: string;
   comparison_deltas: {
     active_customers?: number;
     sales_total?: number;

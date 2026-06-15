@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useActivitySummary } from '@/hooks/useDashboard';
 import Badge from '@/components/ui/Badge';
+import { normalizeAlerts } from '@/lib/normalizers';
+import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import {
   AlertTriangle,
   TrendingUp,
@@ -21,8 +23,9 @@ import {
   Check
 } from 'lucide-react';
 
-export default function AlertsFeedPage() {
-  const { data: alerts, isLoading, isError } = useActivitySummary();
+function AlertsFeedPageContent() {
+  const { data: rawAlerts, isLoading, isError } = useActivitySummary();
+  const alerts = React.useMemo(() => normalizeAlerts(rawAlerts), [rawAlerts]);
   const [filterType, setFilterType] = useState<'all' | 'risk' | 'growth' | 'anomaly'>('all');
   const [resolvedAlerts, setResolvedAlerts] = useState<string[]>([]);
   const [notificationDispatched, setNotificationDispatched] = useState<string | null>(null);
@@ -52,17 +55,18 @@ export default function AlertsFeedPage() {
   }
 
   // Filter logic
-  const activeAlerts = (alerts || []).filter(item => {
+  const activeAlerts = (Array.isArray(alerts) ? alerts : []).filter(item => {
     if (resolvedAlerts.includes(item.id)) return false;
     
-    const isRisk = item.alert_type?.toLowerCase().includes('risk') || item.alert_type?.toLowerCase().includes('deteriorate') || item.alert_type?.toLowerCase().includes('payment');
-    const isGrowth = item.alert_type?.toLowerCase().includes('growth') || item.alert_type?.toLowerCase().includes('improve');
+    const isRisk = item.alert_type?.toLowerCase().includes('risk') || item.alert_type?.toLowerCase().includes('deteriorate') || item.alert_type?.toLowerCase().includes('payment') || item.alert_type?.toLowerCase().includes('warning');
+    const isGrowth = item.alert_type?.toLowerCase().includes('growth') || item.alert_type?.toLowerCase().includes('improve') || item.alert_type?.toLowerCase().includes('opportunity') || item.alert_type?.toLowerCase().includes('signal');
     
     if (filterType === 'risk') return isRisk;
     if (filterType === 'growth') return isGrowth;
     if (filterType === 'anomaly') return !isRisk && !isGrowth;
     return true;
   });
+
 
   return (
     <div className="space-y-8 font-sans">
@@ -261,3 +265,12 @@ export default function AlertsFeedPage() {
     </div>
   );
 }
+
+export default function AlertsFeedPage() {
+  return (
+    <RouteErrorBoundary routeName="Intelligence Alerts Feed">
+      <AlertsFeedPageContent />
+    </RouteErrorBoundary>
+  );
+}
+

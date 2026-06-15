@@ -7,8 +7,9 @@ import { formatCurrency } from '@/lib/utils';
 import Table, { TableColumn } from '@/components/ui/Table';
 import Badge from '@/components/ui/Badge';
 import { Briefcase, ArrowRight, Phone, Mail, FileText, Check } from 'lucide-react';
+import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 
-export default function CollectionsQueuePage() {
+function CollectionsQueuePageContent() {
   const { highRisk, isLoading } = useDashboardQueues();
   const [loggedActions, setLoggedActions] = useState<Record<string, 'call' | 'mail' | 'dunning'>>({});
 
@@ -28,7 +29,7 @@ export default function CollectionsQueuePage() {
     );
   }
 
-  const collectionsList = (highRisk.data || []).map(item => ({
+  const collectionsList = (Array.isArray(highRisk?.data) ? highRisk.data : []).map(item => ({
     customer_id: item.customer_id,
     customer_name: item.customer_name || 'Wholesale Debtor Account',
     city: item.city || 'Regional Scope',
@@ -211,7 +212,15 @@ export default function CollectionsQueuePage() {
           />
         </div>
       </div>
-
     </div>
   );
 }
+
+export default function CollectionsQueuePage() {
+  return (
+    <RouteErrorBoundary routeName="Collections Queue telemetry">
+      <CollectionsQueuePageContent />
+    </RouteErrorBoundary>
+  );
+}
+

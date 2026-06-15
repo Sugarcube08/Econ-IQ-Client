@@ -7,8 +7,9 @@ import { formatCurrency } from '@/lib/utils';
 import Table, { TableColumn } from '@/components/ui/Table';
 import Badge from '@/components/ui/Badge';
 import { ShieldAlert, ArrowRight, Flame, AlertTriangle } from 'lucide-react';
+import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 
-export default function RiskSignalsPage() {
+function RiskSignalsPageContent() {
   const { deteriorating, highRisk, isLoading } = useDashboardQueues();
 
   if (isLoading) {
@@ -22,7 +23,7 @@ export default function RiskSignalsPage() {
 
   // Combine queues for full view
   const combinedRiskList = [
-    ...(highRisk.data || []).map(item => ({
+    ...(Array.isArray(highRisk?.data) ? highRisk.data : []).map(item => ({
       customer_id: item.customer_id,
       customer_name: item.customer_name || 'Corporate Debtor',
       city: item.city || 'National Account',
@@ -31,7 +32,7 @@ export default function RiskSignalsPage() {
       outstanding: item.outstanding_current || 0,
       severity: 'CRITICAL_RISK' as const
     })),
-    ...(deteriorating.data || []).map(item => ({
+    ...(Array.isArray(deteriorating?.data) ? deteriorating.data : []).map(item => ({
       customer_id: item.customer_id,
       customer_name: item.customer_name || 'Deteriorating Retailer',
       city: item.city || 'Regional Scope',
@@ -189,7 +190,15 @@ export default function RiskSignalsPage() {
           />
         </div>
       </div>
-
     </div>
   );
 }
+
+export default function RiskSignalsPage() {
+  return (
+    <RouteErrorBoundary routeName="Risk Signals telemetry">
+      <RiskSignalsPageContent />
+    </RouteErrorBoundary>
+  );
+}
+

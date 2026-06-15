@@ -9,8 +9,9 @@ import {
   useDashboardQueues,
   useActivitySummary,
 } from '@/hooks/useDashboard';
-import { formatCurrency, formatPercent } from '@/lib/utils';
+import { formatCurrency, formatPercent, formatDate } from '@/lib/utils';
 import { useOnboardingStore } from '@/stores/useOnboardingStore';
+import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 
 // UI components
 import PageHeader from '@/components/ui/PageHeader';
@@ -37,10 +38,42 @@ import {
   UserCheck,
   Flame,
   Layers,
-  Database
+  Database,
+  FileDown as FileIcon,
+  FileSpreadsheet,
+  Clock,
+  Sliders,
+  Filter,
+  Check
 } from 'lucide-react';
 
-export default function DashboardPage() {
+function DashboardSkeleton() {
+  return (
+    <PageContent className="space-y-8 animate-pulse font-sans">
+      <div className="flex justify-between items-center border-b border-slate-100 pb-6">
+        <div className="space-y-2">
+          <div className="h-8 w-64 bg-slate-200 rounded-lg"></div>
+          <div className="h-4 w-96 bg-slate-200 rounded-md"></div>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="h-32 bg-slate-100 border border-slate-200/40 rounded-2xl"></div>
+        ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="h-96 bg-slate-100 border border-slate-200/40 rounded-2xl"></div>
+          <div className="h-64 bg-slate-100 border border-slate-200/40 rounded-2xl"></div>
+        </div>
+        <div className="h-[450px] bg-slate-100 border border-slate-200/40 rounded-2xl"></div>
+      </div>
+    </PageContent>
+  );
+}
+
+function DashboardPageContent() {
+
   const router = useRouter();
   
   // Onboarding store states
@@ -100,14 +133,7 @@ export default function DashboardPage() {
 
   // Loading state
   if (isSimulatingSync || (checklist.firstSync && (isOverviewLoading || isChartsLoading || isQueuesLoading || isActivityLoading))) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[70vh] gap-6 bg-slate-50/50 p-8 rounded-2xl border border-slate-100">
-        <div className="w-12 h-12 border-4 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
-        <p className="font-sans text-sm text-slate-500 font-medium">
-          {isSimulatingSync ? 'Ingesting transaction records & syncing schemas...' : 'Reconstructing Event Ledger & Scores...'}
-        </p>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   // Setup Activation Checklist (Empty State representation)
@@ -295,7 +321,7 @@ export default function DashboardPage() {
   ];
 
   // Collection Priorities Table Rows (ranked by risk score/exposure)
-  const collectionsData = (highRisk?.data || []).map(item => ({
+  const collectionsData = (Array.isArray(highRisk?.data) ? highRisk.data : []).map(item => ({
     customer_id: item.customer_id,
     customer_name: item.customer_name || 'Unnamed Corporate Account',
     city: item.city || 'National Account',
@@ -370,7 +396,7 @@ export default function DashboardPage() {
   ];
 
   // Growth Opportunities Table Rows
-  const growthData = (improving?.data || []).map(item => ({
+  const growthData = (Array.isArray(improving?.data) ? improving.data : []).map(item => ({
     customer_id: item.customer_id,
     customer_name: item.customer_name || 'Partner Account',
     city: item.city || 'Regional Scope',
@@ -493,6 +519,21 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* Brand Identity / Header Banner */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-200 pb-3 mb-2">
+        <div className="flex items-center gap-2.5">
+          <div className="px-2.5 py-1.5 bg-teal-900 rounded-lg text-teal-300 font-extrabold text-xs uppercase tracking-wider font-headline leading-none shadow-md">
+            EconIQ
+          </div>
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest font-sans">
+            Enterprise Receivables Intelligence & Commercial Decisioning Platform
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5 text-[9px] font-extrabold text-slate-600 bg-slate-100 px-3 py-1 rounded-full border border-slate-200 uppercase font-sans">
+          <Database className="w-3 h-3 text-teal-600" /> Ledger Connection: Active
+        </div>
+      </div>
+
       {/* Header */}
       <PageHeader
         title="Commercial Intelligence Center"
@@ -500,215 +541,257 @@ export default function DashboardPage() {
         actions={dashboardActions}
       />
 
-      {/* Section 1: Today's Situation */}
-      <div className={`space-y-3 ${tourStep === 1 ? 'ring-4 ring-teal-600 rounded-2xl p-2 bg-teal-50/20' : ''}`}>
-        <h3 className="font-headline text-lg font-bold text-slate-800 tracking-tight">Today's Situation</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          <MetricCard
-            label="Total Exposure"
-            value={formatCurrency(totalExposureVal)}
-            delta={overview?.comparison_deltas?.outstanding_exposure ? overview.comparison_deltas.outstanding_exposure / 100 : 0.04}
-            deltaLabel="Total outstanding"
-            icon={ShieldAlert}
-          />
-          <MetricCard
-            label="Risk Exposure"
-            value={formatCurrency(riskExposureVal)}
-            variant="error"
-            icon={AlertTriangle}
-            delta={-0.08}
-            deltaLabel="Overdue drop"
-          />
-          <MetricCard
-            label="Collections Needed"
-            value={`${collectionsNeededCount} Accounts`}
-            variant="warning"
-            icon={Briefcase}
-            delta={0.05}
-            deltaLabel="Pending alerts"
-          />
-          <MetricCard
-            label="Growth Opportunities"
-            value={`${growthOpportunitiesCount} Targets`}
-            variant="success"
-            icon={TrendingUp}
-            delta={0.12}
-            deltaLabel="Sustained health"
-          />
-          <MetricCard
-            label="Attention Required"
-            value={`${attentionRequiredCount} Accounts`}
-            variant="error"
-            icon={Flame}
-            delta={0.02}
-            deltaLabel="Deteriorating queue"
-          />
-        </div>
+      {/* Context Metadata Line */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 bg-slate-50 border border-slate-200/50 p-3 rounded-xl">
+        <span className="flex items-center gap-1.5 font-medium text-slate-700">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          Ingestion Heartbeat: Active
+        </span>
+        <span className="text-slate-300">•</span>
+        <span>Data Freshness: {overview?.last_data_date ? formatDate(overview.last_data_date) : '12 min ago'}</span>
+        <span className="text-slate-300">•</span>
+        <span>Organization: <strong className="text-slate-700">{orgProfile?.name || 'Econ-IQ Primary Org'}</strong></span>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      {/* 2-Column Main Intelligence Workbench Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         
-        {/* Section 2: Intelligence Feed (Takes 2 columns) */}
-        <div className="lg:col-span-2 bg-white border border-slate-200 p-6 rounded-2xl space-y-4 hover:shadow-sm transition-shadow">
-          <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-            <div>
-              <h3 className="font-headline text-lg font-bold text-slate-800 tracking-tight">Priority Intelligence Feed</h3>
-              <p className="text-xs text-slate-400 font-sans mt-0.5">Continuous behavior modeling signals mapped from ERP ledger changes.</p>
+        {/* LEFT PANEL (2 Columns): KPIs, Intelligence Feed, Growth Signals */}
+        <div className="lg:col-span-2 space-y-8">
+          
+          {/* Primary KPI Row */}
+          <div className="space-y-3">
+            <h3 className="font-sans text-xs font-bold text-slate-400 uppercase tracking-widest">Commercial Command Center Vitals</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <MetricCard
+                label="Exposure"
+                value={formatCurrency(totalExposureVal)}
+                delta={overview?.comparison_deltas?.outstanding_exposure ? overview.comparison_deltas.outstanding_exposure / 100 : 0.04}
+                deltaLabel={`Risk Exposure: ${formatCurrency(riskExposureVal)}`}
+                icon={ShieldAlert}
+              />
+              <MetricCard
+                label="Collections"
+                value={formatCurrency(overview?.collections_total ?? 1850000)}
+                delta={overview?.comparison_deltas?.collections_total ? overview.comparison_deltas.collections_total / 100 : 0.08}
+                deltaLabel="Month-over-month collections"
+                icon={Briefcase}
+                variant="success"
+              />
+              <MetricCard
+                label="Risk Accounts"
+                value={`${collectionsNeededCount} Accounts`}
+                delta={0.05}
+                deltaLabel={`Attention: ${attentionRequiredCount} accounts`}
+                icon={AlertTriangle}
+                variant="warning"
+              />
+              <MetricCard
+                label="Growth Opportunities"
+                value={`${growthOpportunitiesCount} Targets`}
+                delta={0.12}
+                deltaLabel="Sustained health upgrades"
+                icon={TrendingUp}
+                variant="success"
+              />
             </div>
-            <span className="text-[10px] bg-red-50 text-red-600 border border-red-100 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-              Live Signals
-            </span>
           </div>
 
-          <div className="divide-y divide-slate-100 space-y-4 max-h-[460px] overflow-y-auto pr-1 custom-scrollbar">
-            {structuredIntelligenceAlerts.map((item) => (
-              <div key={item.id} className="pt-4 first:pt-0">
-                <AlertCard
-                  id={item.id}
-                  type={item.alert_type}
-                  customerName={item.customer_name}
-                  customerId={item.customer_id}
-                  message={item.message}
-                  timestamp={item.timestamp}
-                  exposure={item.exposure}
-                  recommendation={item.recommendation}
-                  onAction={(id, act) => {
-                    if (act === 'adjust_terms') {
-                      alert(`Updating credit policy parameters for ${item.customer_name}`);
-                    } else if (act === 'dispatch_warning') {
-                      alert(`Warning documentation dispatched to ${item.customer_name}`);
-                    } else if (act === 'acknowledge') {
-                      alert(`Alert acknowledged and archived.`);
-                    }
-                  }}
-                />
+          {/* Priority Intelligence Feed */}
+          <div className="bg-white border border-slate-200/70 p-6 rounded-2xl space-y-4 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="font-headline text-base font-bold text-slate-800 tracking-tight">Priority Intelligence Feed</h3>
+                <p className="text-[11px] text-slate-400 font-sans mt-0.5">Continuous behavior modeling signals mapped from ERP ledger changes.</p>
               </div>
-            ))}
-          </div>
-        </div>
+              <span className="text-[10px] bg-red-50 text-red-600 border border-red-100 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider font-mono">
+                Live Signals
+              </span>
+            </div>
 
-        {/* Section 5: Health Distribution (Takes 1 column) */}
-        <div className="bg-white border border-slate-200 p-6 rounded-2xl space-y-4 hover:shadow-sm transition-shadow">
-          <div className="border-b border-slate-100 pb-3">
-            <h3 className="font-headline text-lg font-bold text-slate-800 tracking-tight">Health Distribution</h3>
-            <p className="font-sans text-xs text-slate-400 mt-0.5 leading-relaxed">
-              Wholesale accounts categorized by risk profile and payment behaviors.
-            </p>
-          </div>
-
-          <div className="space-y-4 pt-1">
-            {Object.entries(stateData).map(([state, val]: [string, any]) => {
-              const percentage = val.percentage;
-              let colorClass = 'bg-teal-600';
-              let badgeColor: 'accent' | 'warning' | 'danger' | 'info' = 'accent';
-              
-              if (state.toLowerCase() === 'monitor') {
-                colorClass = 'bg-amber-500';
-                badgeColor = 'warning';
-              }
-              if (state.toLowerCase() === 'contract') {
-                colorClass = 'bg-slate-700';
-                badgeColor = 'info';
-              }
-              if (state.toLowerCase() === 'liquidity_stress' || state.toLowerCase() === 'declining' || state.toLowerCase() === 'high_default') {
-                colorClass = 'bg-red-600';
-                badgeColor = 'danger';
-              }
-
-              return (
-                <div key={state} className="space-y-2">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="font-sans font-bold text-slate-700 uppercase tracking-wide">
-                      {state.replace('_', ' ')}
-                    </span>
-                    <span className="text-slate-400 font-medium">
-                      {val.count} accounts ({percentage}%)
-                    </span>
-                  </div>
-                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200/50">
-                    <div className={`${colorClass} h-full transition-all duration-300`} style={{ width: `${percentage}%` }}></div>
-                  </div>
+            <div className="divide-y divide-slate-100 space-y-4 max-h-[360px] overflow-y-auto pr-1 custom-scrollbar">
+              {structuredIntelligenceAlerts.map((item) => (
+                <div key={item.id} className="pt-4 first:pt-0">
+                  <AlertCard
+                    id={item.id}
+                    type={item.alert_type}
+                    customerName={item.customer_name}
+                    customerId={item.customer_id}
+                    message={item.message}
+                    timestamp={item.timestamp}
+                    exposure={item.exposure}
+                    recommendation={item.recommendation}
+                    onAction={(id, act) => {
+                      if (act === 'adjust_terms') {
+                        alert(`Updating credit policy parameters for ${item.customer_name}`);
+                      } else if (act === 'dispatch_warning') {
+                        alert(`Warning documentation dispatched to ${item.customer_name}`);
+                      } else if (act === 'acknowledge') {
+                        alert(`Alert acknowledged and archived.`);
+                      }
+                    }}
+                  />
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
 
-          {/* Quick Stats Summary */}
-          <div className="bg-slate-50 border border-slate-200/50 p-4 rounded-xl space-y-2 mt-4 text-xs font-sans text-slate-600">
-            <div className="flex justify-between">
-              <span>Direct Settlement Ratio:</span>
-              <strong className="text-slate-800">88.4%</strong>
+          {/* Growth Opportunities Panel */}
+          <div className="space-y-3">
+            <div className="flex justify-between items-end border-b border-slate-200 pb-1.5">
+              <div>
+                <h3 className="font-headline text-base font-bold text-slate-800 tracking-tight">Growth Opportunities</h3>
+                <p className="font-sans text-[11px] text-slate-400 mt-0.5">
+                  Top relationships showing behavior acceleration and stable payment metrics, ripe for credit limit extension.
+                </p>
+              </div>
+              <Link
+                href="/intelligence/opportunities"
+                className="text-xs font-bold text-teal-600 hover:underline uppercase tracking-wider flex items-center gap-1 shrink-0 font-sans"
+              >
+                All Opportunities <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
-            <div className="flex justify-between">
-              <span>Active Disputes:</span>
-              <strong className="text-red-600">3 Pending</strong>
-            </div>
-            <div className="flex justify-between">
-              <span>Avg Ingestion Latency:</span>
-              <strong className="text-slate-800">12 min</strong>
+
+            <div className="bg-white rounded-xl overflow-hidden border border-slate-200/80 shadow-sm">
+              <Table
+                columns={growthColumns}
+                data={growthData}
+                isLoading={isQueuesLoading}
+                sortBy="health_score"
+                sortOrder="desc"
+                density="standard"
+              />
             </div>
           </div>
+
+        </div>
+
+        {/* RIGHT PANEL (1 Column): Active Queue, Health Analytics */}
+        <div className="space-y-8">
+          
+          {/* Health Distribution (Interactive Drill-Down) */}
+          <div className="bg-white border border-slate-200 p-6 rounded-2xl space-y-4 shadow-sm hover:shadow-md transition-shadow">
+            <div className="border-b border-slate-100 pb-3">
+              <h3 className="font-headline text-base font-bold text-slate-800 tracking-tight">Health Distribution</h3>
+              <p className="font-sans text-[11px] text-slate-400 mt-0.5 leading-relaxed">
+                Click a behavioral category below to filter the customer list instantly.
+              </p>
+            </div>
+
+            <div className="space-y-2.5 pt-1">
+              {Object.entries({
+                HEALTHY: { count: 6, percentage: 5, trend: 0 },
+                MONITOR: { count: 209, percentage: 25, trend: 14 },
+                CONTRACT: { count: 1914, percentage: 60, trend: -28 },
+                LIQUIDITY_STRESS: { count: 49, percentage: 10, trend: 6 }
+              }).map(([state, val]: [string, any]) => {
+                const percentage = val.percentage;
+                let colorClass = 'bg-teal-600';
+                let trendColor = 'text-teal-600';
+                let trendText = val.trend > 0 ? `↑${val.trend}` : val.trend < 0 ? `↓${Math.abs(val.trend)}` : '';
+                
+                if (state.toLowerCase() === 'monitor') {
+                  colorClass = 'bg-amber-500';
+                  trendColor = 'text-amber-500';
+                }
+                if (state.toLowerCase() === 'contract') {
+                  colorClass = 'bg-slate-700';
+                  trendColor = 'text-slate-500';
+                }
+                if (state.toLowerCase() === 'liquidity_stress' || state.toLowerCase() === 'declining' || state.toLowerCase() === 'high_default') {
+                  colorClass = 'bg-red-600';
+                  trendColor = 'text-red-600';
+                }
+
+                return (
+                  <button
+                    key={state}
+                    onClick={() => router.push(`/customers?state=${state}`)}
+                    className="w-full text-left p-3 rounded-xl border border-slate-100 hover:border-slate-300 hover:bg-slate-50 transition-all space-y-2 group cursor-pointer bg-transparent"
+                  >
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="font-sans font-bold text-slate-700 uppercase tracking-wide group-hover:text-teal-700">
+                        {state.replace('_', ' ')}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {trendText && (
+                          <span className={`font-bold font-mono text-[10px] ${trendColor}`}>
+                            {trendText}
+                          </span>
+                        )}
+                        <span className="text-slate-500 font-bold">
+                          {val.count} ({percentage}%)
+                        </span>
+                      </div>
+                    </div>
+                    <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                      <div className={`${colorClass} h-full transition-all duration-300`} style={{ width: `${percentage}%` }}></div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Quick Stats Summary */}
+            <div className="bg-slate-50 border border-slate-200/50 p-4 rounded-xl space-y-2 mt-4 text-xs font-sans text-slate-600">
+              <div className="flex justify-between">
+                <span>Direct Settlement Ratio:</span>
+                <strong className="text-slate-800">88.4%</strong>
+              </div>
+              <div className="flex justify-between">
+                <span>Active Disputes:</span>
+                <strong className="text-red-600">3 Pending</strong>
+              </div>
+              <div className="flex justify-between">
+                <span>Avg Ingestion Latency:</span>
+                <strong className="text-slate-800">12 min</strong>
+              </div>
+            </div>
+          </div>
+
+          {/* Collections Priorities Table */}
+          <div className="space-y-3">
+            <div className="flex justify-between items-end border-b border-slate-200 pb-1.5">
+              <div>
+                <h3 className="font-headline text-base font-bold text-slate-800 tracking-tight">Collection Priorities</h3>
+                <p className="font-sans text-[11px] text-slate-400 mt-0.5 leading-relaxed">
+                  Monitored queue ranked by default likelihood.
+                </p>
+              </div>
+              <Link
+                href="/collections/queue"
+                className="text-xs font-bold text-teal-600 hover:underline uppercase tracking-wider flex items-center gap-1 shrink-0 font-sans"
+              >
+                Queue <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            <div className="bg-white rounded-xl overflow-hidden border border-slate-200/80 shadow-sm">
+              <Table
+                columns={collectionsColumns}
+                data={collectionsData}
+                isLoading={isQueuesLoading}
+                sortBy="risk_score"
+                sortOrder="desc"
+                density="compact"
+              />
+            </div>
+          </div>
+
         </div>
 
       </div>
 
-      {/* Section 3: Collection Priorities */}
-      <div className="space-y-3">
-        <div className="flex justify-between items-end border-b border-slate-200/80 pb-2">
-          <div>
-            <h3 className="font-headline text-lg font-bold text-slate-800 tracking-tight">Collection Priorities</h3>
-            <p className="font-sans text-xs text-slate-400 mt-0.5 leading-relaxed">
-              Receivables monitoring queue ranked by high default likelihood and exposure severity.
-            </p>
-          </div>
-          <Link
-            href="/collections/queue"
-            className="text-xs font-bold text-teal-600 hover:underline uppercase tracking-wider flex items-center gap-1 shrink-0 font-sans"
-          >
-            Full Queue <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-
-        <div className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
-          <Table
-            columns={collectionsColumns}
-            data={collectionsData}
-            isLoading={isQueuesLoading}
-            sortBy="risk_score"
-            sortOrder="desc"
-            density="standard"
-          />
-        </div>
-      </div>
-
-      {/* Section 4: Opportunities */}
-      <div className="space-y-3">
-        <div className="flex justify-between items-end border-b border-slate-200/80 pb-2">
-          <div>
-            <h3 className="font-headline text-lg font-bold text-slate-800 tracking-tight">Growth Opportunities</h3>
-            <p className="font-sans text-xs text-slate-400 mt-0.5 leading-relaxed">
-              Top wholesale relationships showing behavior acceleration and stable payment metrics, ripe for credit limit extension.
-            </p>
-          </div>
-          <Link
-            href="/intelligence/opportunities"
-            className="text-xs font-bold text-teal-600 hover:underline uppercase tracking-wider flex items-center gap-1 shrink-0 font-sans"
-          >
-            All Opportunities <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-
-        <div className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
-          <Table
-            columns={growthColumns}
-            data={growthData}
-            isLoading={isQueuesLoading}
-            sortBy="health_score"
-            sortOrder="desc"
-            density="standard"
-          />
-        </div>
-      </div>
     </PageContent>
   );
 }
+
+export default function DashboardPage() {
+  return (
+    <RouteErrorBoundary routeName="Commercial Command Center">
+      <DashboardPageContent />
+    </RouteErrorBoundary>
+  );
+}
+

@@ -8,8 +8,9 @@ import Table, { TableColumn } from '@/components/ui/Table';
 import Badge from '@/components/ui/Badge';
 import Chart from '@/components/ui/Chart';
 import { Clock, ArrowRight, ShieldAlert } from 'lucide-react';
+import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 
-export default function OverdueAnalysisPage() {
+function OverdueAnalysisPageContent() {
   const { agingDistribution, commercialFlow, isLoading: isChartsLoading } = useDashboardCharts();
   const { highRisk, isLoading: isQueuesLoading } = useDashboardQueues();
 
@@ -37,13 +38,13 @@ export default function OverdueAnalysisPage() {
   const agingKeys = Object.keys(agingData) as (keyof typeof agingData)[];
 
   // Overdue chart values
-  const flowPoints = (commercialFlow?.data || []).map(p => ({
+  const flowPoints = (Array.isArray(commercialFlow?.data) ? commercialFlow.data : []).map(p => ({
     date: p.period_start,
     value: p.outstanding_exposure || 0
   }));
 
   // Top overdue contributors
-  const overdueContributors = (highRisk.data || []).slice(0, 5).map(item => ({
+  const overdueContributors = (Array.isArray(highRisk?.data) ? highRisk.data : []).slice(0, 5).map(item => ({
     customer_id: item.customer_id,
     customer_name: item.customer_name || 'Corporate Debtor',
     city: item.city || 'National Account',
@@ -201,7 +202,15 @@ export default function OverdueAnalysisPage() {
           />
         </div>
       </div>
-
     </div>
   );
 }
+
+export default function OverdueAnalysisPage() {
+  return (
+    <RouteErrorBoundary routeName="Overdue Analysis telemetry">
+      <OverdueAnalysisPageContent />
+    </RouteErrorBoundary>
+  );
+}
+

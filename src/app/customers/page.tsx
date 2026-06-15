@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useCustomers } from '@/hooks/useCustomer';
 import { ReportService } from '@/services/report.service';
 import { formatCurrency, formatPercent, formatDate } from '@/lib/utils';
@@ -36,14 +36,22 @@ import {
 
 function AuthenticatedCustomers() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const stateParam = searchParams?.get('state') || '';
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [sortBy, setSortBy] = useState('trust_score');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [stateFilter, setStateFilter] = useState<string>('');
+  const [stateFilter, setStateFilter] = useState<string>(stateParam.toUpperCase());
   const [isExporting, setIsExporting] = useState(false);
+
+  useEffect(() => {
+    if (stateParam) {
+      setStateFilter(stateParam.toUpperCase());
+    }
+  }, [stateParam]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -89,7 +97,7 @@ function AuthenticatedCustomers() {
     }
   };
 
-  const customers = data?.data?.customers || [];
+  const customers = (data && data.data && Array.isArray(data.data.customers)) ? data.data.customers : [];
   const pagination = data?.metadata?.pagination || {
     page: 1,
     limit: 10,
@@ -361,6 +369,41 @@ function AuthenticatedCustomers() {
           hasPrevious={pagination.has_previous}
           hasNext={pagination.has_next}
           renderRowExpansion={renderRowExpansion}
+          emptyState={
+            <div className="flex flex-col items-center justify-center py-12 px-6 text-center space-y-4 max-w-md mx-auto font-sans">
+              <div className="w-12 h-12 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center">
+                <span className="material-symbols-outlined text-[24px]">group</span>
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wide">
+                  No customer records available yet.
+                </h4>
+                <p className="text-slate-400 text-xs leading-relaxed max-w-xs mx-auto">
+                  To get started, synchronize your ERP invoice ledgers, import billing tables from CSV, or manually provision corporate accounts.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2 justify-center pt-2">
+                <button
+                  onClick={() => alert('Triggering ERP sync...')}
+                  className="px-4 py-2 bg-teal-600 text-white font-bold uppercase tracking-wider rounded text-[10px] hover:brightness-110 transition-colors shadow-sm cursor-pointer border-0"
+                >
+                  Connect ERP source
+                </button>
+                <button
+                  onClick={() => alert('Opening CSV import dialog...')}
+                  className="px-4 py-2 bg-slate-100 border border-slate-200 text-slate-700 font-bold uppercase tracking-wider rounded text-[10px] hover:bg-slate-200 transition-colors cursor-pointer"
+                >
+                  Import CSV
+                </button>
+                <button
+                  onClick={() => alert('Opening manual creator...')}
+                  className="px-4 py-2 bg-slate-100 border border-slate-200 text-slate-700 font-bold uppercase tracking-wider rounded text-[10px] hover:bg-slate-200 transition-colors cursor-pointer"
+                >
+                  Create Customer
+                </button>
+              </div>
+            </div>
+          }
         />
       </div>
     </PageContent>
@@ -459,5 +502,15 @@ export default function CustomersPage() {
     );
   }
 
-  return isAuthenticated ? <AuthenticatedCustomers /> : <PublicCustomers />;
+  return isAuthenticated ? (
+    <Suspense fallback={
+      <div className="min-h-[60vh] flex items-center justify-center bg-slate-50/50">
+        <div className="w-8 h-8 border-4 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    }>
+      <AuthenticatedCustomers />
+    </Suspense>
+  ) : (
+    <PublicCustomers />
+  );
 }

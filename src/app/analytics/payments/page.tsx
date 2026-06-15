@@ -7,8 +7,9 @@ import { formatCurrency, formatPercent } from '@/lib/utils';
 import Table, { TableColumn } from '@/components/ui/Table';
 import Chart from '@/components/ui/Chart';
 import { DollarSign, ArrowRight } from 'lucide-react';
+import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 
-export default function PaymentAnalyticsPage() {
+function PaymentAnalyticsPageContent() {
   const { commercialFlow, agingDistribution, isLoading: isChartsLoading } = useDashboardCharts();
   const { highRisk, isLoading: isQueuesLoading } = useDashboardQueues();
 
@@ -24,7 +25,7 @@ export default function PaymentAnalyticsPage() {
   }
 
   // Collections trend points
-  const paymentPoints = (commercialFlow?.data || []).map(p => ({
+  const paymentPoints = (Array.isArray(commercialFlow?.data) ? commercialFlow.data : []).map(p => ({
     date: p.period_start,
     value: p.collection_volume || 0
   }));
@@ -42,7 +43,7 @@ export default function PaymentAnalyticsPage() {
   const totalOutstandingSum = Object.values(agingData).reduce((a, b) => a + b, 0);
 
   // High risk collection accounts
-  const collectorsList = (highRisk.data || []).map(item => ({
+  const collectorsList = (Array.isArray(highRisk?.data) ? highRisk.data : []).map(item => ({
     customer_id: item.customer_id,
     customer_name: item.customer_name || 'Wholesale Client',
     city: item.city || 'Regional Scope',
@@ -176,7 +177,15 @@ export default function PaymentAnalyticsPage() {
           />
         </div>
       </div>
-
     </div>
   );
 }
+
+export default function PaymentAnalyticsPage() {
+  return (
+    <RouteErrorBoundary routeName="Payment Analytics telemetry">
+      <PaymentAnalyticsPageContent />
+    </RouteErrorBoundary>
+  );
+}
+

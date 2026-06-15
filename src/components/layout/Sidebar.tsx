@@ -115,7 +115,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         />
       )}
 
-      <aside className={`w-60 bg-slate-950 border-r border-slate-800 flex flex-col h-screen fixed left-0 top-0 text-slate-300 z-50 select-none transition-transform duration-300 md:translate-x-0 ${
+      <aside className={`w-52 bg-slate-950 border-r border-slate-800 flex flex-col h-screen fixed left-0 top-0 text-slate-300 z-50 select-none transition-transform duration-300 md:translate-x-0 ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         
@@ -196,7 +196,9 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
               </span>
               <div className="space-y-0.5">
                 {group.items.map((item) => {
-                  const isActive = pathname === item.path || (item.path !== '/dashboard' && pathname.startsWith(item.path));
+                  const isActive = item.path === '/customers'
+                    ? pathname === '/customers'
+                    : pathname === item.path || (item.path !== '/dashboard' && pathname.startsWith(item.path + '/'));
                   const Icon = item.icon;
                   return (
                     <Link

@@ -18,7 +18,7 @@ export default function AppShell({ children }: AppShellProps) {
       <Sidebar isOpen={mobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)} />
       
       {/* Right Column (Header & Content) */}
-      <div className="flex-grow flex flex-col min-w-0 min-h-screen md:pl-60">
+      <div className="flex-grow flex flex-col min-w-0 min-h-screen md:pl-52">
         {/* Universal Header */}
         <Header onToggleSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)} />
         

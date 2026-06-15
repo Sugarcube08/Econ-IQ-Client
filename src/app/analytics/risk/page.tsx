@@ -8,8 +8,9 @@ import Table, { TableColumn } from '@/components/ui/Table';
 import Badge from '@/components/ui/Badge';
 import Chart from '@/components/ui/Chart';
 import { ShieldAlert, ArrowRight, PieChart } from 'lucide-react';
+import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 
-export default function RiskAnalyticsPage() {
+function RiskAnalyticsPageContent() {
   const { stateDistribution, isLoading: isChartsLoading } = useDashboardCharts();
   const { highRisk, isLoading: isQueuesLoading } = useDashboardQueues();
 
@@ -27,7 +28,7 @@ export default function RiskAnalyticsPage() {
   const stateData = stateDistribution?.data || {};
 
   // Risk distribution points
-  const riskList = (highRisk.data || []).map(item => ({
+  const riskList = (Array.isArray(highRisk?.data) ? highRisk.data : []).map(item => ({
     customer_id: item.customer_id,
     customer_name: item.customer_name || 'Wholesale Client',
     city: item.city || 'Regional Scope',
@@ -199,7 +200,15 @@ export default function RiskAnalyticsPage() {
           />
         </div>
       </div>
-
     </div>
   );
 }
+
+export default function RiskAnalyticsPage() {
+  return (
+    <RouteErrorBoundary routeName="Risk Analytics telemetry">
+      <RiskAnalyticsPageContent />
+    </RouteErrorBoundary>
+  );
+}
+

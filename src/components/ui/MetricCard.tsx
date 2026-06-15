@@ -38,9 +38,9 @@ export default function MetricCard({
   };
 
   return (
-    <Card className="flex flex-col justify-between h-36 hover:shadow-md transition-shadow">
-      <div className="flex justify-between items-start">
-        <span className="font-sans text-[12px] font-bold text-outline uppercase tracking-wider">
+    <Card className="flex flex-col justify-between min-h-[9rem] h-auto hover:shadow-md transition-shadow p-5 space-y-3">
+      <div className="flex justify-between items-start gap-4">
+        <span className="font-sans text-[11px] font-bold text-outline uppercase tracking-wider block leading-relaxed">
           {label}
         </span>
         {Icon && (
@@ -50,19 +50,22 @@ export default function MetricCard({
         )}
       </div>
       
-      <div className="flex items-baseline justify-between mt-4">
-        <span className={`font-headline text-[32px] font-extrabold ${valueColors[variant]} tracking-tight`}>
-          {value}
-        </span>
-        {delta !== undefined && (
-          <div className="flex flex-col items-end leading-none">
+      <div className="flex flex-col justify-end mt-auto space-y-1">
+        <div className="flex items-baseline justify-between gap-2 flex-wrap">
+          <span 
+            className={`font-headline font-extrabold ${valueColors[variant]} tracking-tight`}
+            style={{ fontSize: 'clamp(1.5rem, 5.5vw, 2rem)', lineHeight: '1.1' }}
+          >
+            {value}
+          </span>
+          {delta !== undefined && (
             <TrendIndicator value={delta} size="sm" />
-            {deltaLabel && (
-              <span className="text-[10px] text-outline/60 mt-1 font-sans font-semibold uppercase">
-                {deltaLabel}
-              </span>
-            )}
-          </div>
+          )}
+        </div>
+        {deltaLabel && (
+          <span className="text-[10px] text-outline/70 font-sans font-semibold uppercase tracking-wider block mt-1">
+            {deltaLabel}
+          </span>
         )}
       </div>
     </Card>

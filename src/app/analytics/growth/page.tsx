@@ -7,8 +7,9 @@ import { formatCurrency, formatPercent } from '@/lib/utils';
 import Table, { TableColumn } from '@/components/ui/Table';
 import Chart from '@/components/ui/Chart';
 import { TrendingUp, ArrowRight, Sparkles } from 'lucide-react';
+import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 
-export default function GrowthAnalyticsPage() {
+function GrowthAnalyticsPageContent() {
   const { commercialFlow, isLoading: isChartsLoading } = useDashboardCharts();
   const { data: topContributors, isLoading: isContributorsLoading } = useTopContributors();
 
@@ -24,13 +25,13 @@ export default function GrowthAnalyticsPage() {
   }
 
   // Sales trend points
-  const salesPoints = (commercialFlow?.data || []).map(p => ({
+  const salesPoints = (Array.isArray(commercialFlow?.data) ? commercialFlow.data : []).map(p => ({
     date: p.period_start,
     value: p.sales_volume || 0
   }));
 
   // Top contributors list
-  const contributors = (topContributors || []).map(item => ({
+  const contributors = (Array.isArray(topContributors) ? topContributors : []).map(item => ({
     customer_id: item.customer_id,
     customer_name: item.customer_name || 'Commercial Account',
     contribution_percent: item.contribution_percent,
@@ -175,7 +176,15 @@ export default function GrowthAnalyticsPage() {
           />
         </div>
       </div>
-
     </div>
   );
 }
+
+export default function GrowthAnalyticsPage() {
+  return (
+    <RouteErrorBoundary routeName="Growth Analytics telemetry">
+      <GrowthAnalyticsPageContent />
+    </RouteErrorBoundary>
+  );
+}
+

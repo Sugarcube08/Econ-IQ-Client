@@ -9,10 +9,14 @@ import {
   TopContributor,
 } from '@/types/dashboard';
 import { StandardResponse } from '@/types/response';
+import { validatePayload, DashboardOverviewSchema } from '@/lib/validators';
 
 export const DashboardService = {
   async getOverview(): Promise<StandardResponse<DashboardOverview>> {
     const res = await apiClient.get<StandardResponse<DashboardOverview>>('/dashboard/overview');
+    if (res.data && res.data.data) {
+      res.data.data = validatePayload(DashboardOverviewSchema, res.data.data, 'DashboardOverviewSchema');
+    }
     return res.data;
   },
 

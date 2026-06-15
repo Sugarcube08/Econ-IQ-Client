@@ -35,3 +35,32 @@ export function formatDate(dateString: string | undefined | null): string {
     return dateString;
   }
 }
+
+export function safeArray<T>(val: any): T[] {
+  return Array.isArray(val) ? val : [];
+}
+
+export function safeObject<T extends object>(val: any): T {
+  return (val !== null && typeof val === 'object' && !Array.isArray(val)) ? val as T : {} as T;
+}
+
+export function safeNumber(val: any, fallback = 0): number {
+  if (typeof val === 'number') return isNaN(val) ? fallback : val;
+  if (typeof val === 'string') {
+    const parsed = parseFloat(val);
+    return isNaN(parsed) ? fallback : parsed;
+  }
+  return fallback;
+}
+
+export function safeString(val: any, fallback = ''): string {
+  if (val === null || val === undefined) return fallback;
+  return String(val);
+}
+
+export function safeDate(val: any): Date | null {
+  if (!val) return null;
+  const d = new Date(val);
+  return isNaN(d.getTime()) ? null : d;
+}
+

@@ -7,8 +7,9 @@ import { formatCurrency, formatPercent } from '@/lib/utils';
 import Table, { TableColumn } from '@/components/ui/Table';
 import Badge from '@/components/ui/Badge';
 import { Zap, ArrowRight, TrendingUp, Sparkles } from 'lucide-react';
+import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 
-export default function OpportunitiesPage() {
+function OpportunitiesPageContent() {
   const { improving, isLoading: isQueuesLoading } = useDashboardQueues();
   const { data: topContributors, isLoading: isContributorsLoading } = useTopContributors();
 
@@ -24,9 +25,9 @@ export default function OpportunitiesPage() {
   }
 
   // Map to unified list of opportunities
-  const opportunitiesList = (improving.data || []).map(item => {
+  const opportunitiesList = (Array.isArray(improving?.data) ? improving.data : []).map(item => {
     // Find contribution if available
-    const contributor = (topContributors || []).find(c => c.customer_id === item.customer_id);
+    const contributor = (Array.isArray(topContributors) ? topContributors : []).find(c => c.customer_id === item.customer_id);
     const contribution = contributor ? contributor.contribution_percent : (item.outstanding_current ? (item.outstanding_current / 100000) * 0.05 : 0.02);
     
     return {
@@ -186,7 +187,15 @@ export default function OpportunitiesPage() {
           />
         </div>
       </div>
-
     </div>
   );
 }
+
+export default function OpportunitiesPage() {
+  return (
+    <RouteErrorBoundary routeName="Growth Opportunities telemetry">
+      <OpportunitiesPageContent />
+    </RouteErrorBoundary>
+  );
+}
+

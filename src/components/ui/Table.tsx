@@ -34,6 +34,7 @@ interface TableProps<T> {
   onRowClick?: (row: T) => void;
   density?: 'compact' | 'standard' | 'relaxed';
   renderRowExpansion?: (row: T) => React.ReactNode;
+  emptyState?: React.ReactNode;
 }
 
 export default function Table<T>({
@@ -52,7 +53,8 @@ export default function Table<T>({
   hasNext = false,
   onRowClick,
   density = 'standard',
-  renderRowExpansion
+  renderRowExpansion,
+  emptyState
 }: TableProps<T>) {
   const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({});
   const [colWidths, setColWidths] = useState<Record<string, number>>({});
@@ -296,7 +298,9 @@ export default function Table<T>({
             ) : data.length === 0 ? (
               <tr>
                 <td colSpan={sortedColumns.length} className="py-16 text-center text-outline">
-                  No records matching target specifications.
+                  {emptyState ? emptyState : (
+                    <span>No records matching target specifications.</span>
+                  )}
                 </td>
               </tr>
             ) : (

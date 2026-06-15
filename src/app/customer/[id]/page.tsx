@@ -11,6 +11,7 @@ import {
 } from '@/hooks/useCustomer';
 import { formatCurrency, formatPercent, formatDate } from '@/lib/utils';
 import { GraphPoint } from '@/types/customer';
+import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 
 // UI components
 import PageHeader from '@/components/ui/PageHeader';
@@ -51,7 +52,7 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-export default function CustomerDetailPage({ params }: PageProps) {
+function CustomerDetailPageContent({ params }: PageProps) {
   const { id } = use(params);
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'overview' | 'payments' | 'orders' | 'growth' | 'timeline' | 'recommendations'>('overview');
@@ -88,7 +89,7 @@ export default function CustomerDetailPage({ params }: PageProps) {
   const trendVal = deltas.health_score || 0.05;
 
   const mapGraphPoints = (points: GraphPoint[] = [], type: 'purchase' | 'payment' | 'rg' | 'outstanding') => {
-    return points.map((p) => {
+    return (Array.isArray(points) ? points : []).map((p) => {
       let value = 0;
       if (type === 'purchase') value = p.purchase_amount ?? p.amount ?? 0;
       else if (type === 'payment') value = p.payment_amount ?? p.amount ?? 0;
@@ -105,12 +106,12 @@ export default function CustomerDetailPage({ params }: PageProps) {
   const positiveDrivers = ['HIGH_TRADE_REGULARITY', 'FAST_SETTLEMENT', 'LOW_CUSTOMER_RG', 'STABLE_PARTICIPATION'];
   const negativeDrivers = ['SLOW_SETTLEMENT', 'LIQUIDITY_STRESS', 'INCONSISTENT_TRADING', 'CRITICAL_BEHAVIORAL_STRESS'];
 
-  const allDrivers = predictions
-    ? Object.values(predictions).flatMap((p) => (p as { key_drivers?: string[] }).key_drivers || [])
+  const allDrivers = (predictions && typeof predictions === 'object')
+    ? Object.values(predictions).flatMap((p) => (p && typeof p === 'object' && 'key_drivers' in p && Array.isArray((p as any).key_drivers) ? (p as any).key_drivers : []))
     : [];
   
-  const activePositive = allDrivers.filter((d) => positiveDrivers.includes(d) || d.includes('regularity') || d.includes('velocity'));
-  const activeNegative = allDrivers.filter((d) => negativeDrivers.includes(d) || d.includes('stress') || d.includes('delay'));
+  const activePositive = (Array.isArray(allDrivers) ? allDrivers : []).filter((d) => positiveDrivers.includes(d) || d.includes('regularity') || d.includes('velocity'));
+  const activeNegative = (Array.isArray(allDrivers) ? allDrivers : []).filter((d) => negativeDrivers.includes(d) || d.includes('stress') || d.includes('delay'));
 
   // Temporal events mapping for behavioral memory
   // Required Examples: Order Spike, Payment Delay, SKU Expansion, Inactivity, Collection Follow-up
@@ -456,7 +457,7 @@ export default function CustomerDetailPage({ params }: PageProps) {
             </div>
 
             <div className="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100 shadow-sm">
-              {recommendations && recommendations.recommendations?.length > 0 ? (
+              {recommendations && Array.isArray(recommendations.recommendations) && recommendations.recommendations.length > 0 ? (
                 recommendations.recommendations.map((r, idx) => {
                   let badgeClass = 'text-teal-600 bg-teal-50 border-teal-200';
                   if (r.priority === 'HIGH' || r.priority === 'CRITICAL') {
@@ -518,3 +519,12 @@ export default function CustomerDetailPage({ params }: PageProps) {
     </PageContent>
   );
 }
+
+export default function CustomerDetailPage({ params }: PageProps) {
+  return (
+    <RouteErrorBoundary routeName="Customer Detail telemetry">
+      <CustomerDetailPageContent params={params} />
+    </RouteErrorBoundary>
+  );
+}
+
