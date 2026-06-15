@@ -84,7 +84,7 @@ export default function PricingPage() {
   ];
 
   return (
-    <div className="space-y-24 py-16 px-6 lg:px-8 bg-[#FAF9F6] text-[#243447]">
+    <div className="space-y-24 py-16 px-6 lg:px-8 bg-background text-secondary">
       {/* Header */}
       <SectionHeader
         tag="Premium Plans"
@@ -100,23 +100,23 @@ export default function PricingPage() {
       {/* FAQ Section */}
       <section className="space-y-12 max-w-[1280px] mx-auto">
         <div className="text-center space-y-3">
-          <span className="text-[10px] font-bold text-[#0F766E] uppercase tracking-wider block">Questions</span>
-          <h2 className="font-headline text-2xl font-extrabold text-[#243447]">Pricing & Implementation FAQ</h2>
+          <span className="text-[10px] font-bold text-brand-accent uppercase tracking-wider block">Questions</span>
+          <h2 className="font-headline text-2xl font-extrabold text-secondary">Pricing & Implementation FAQ</h2>
         </div>
         <FAQSection faqs={pricingFaqs} />
       </section>
 
       {/* Outcome Commitment Callout */}
-      <section className="bg-white border border-[#E3E2DF] rounded-xl p-8 md:p-12 max-w-3xl mx-auto text-center space-y-4">
-        <span className="text-[10px] font-bold text-[#0F766E] uppercase tracking-wider block">Guaranteed Alignment</span>
-        <h3 className="font-headline text-lg font-bold text-[#243447]">Run a historical ledger assessment</h3>
-        <p className="font-sans text-xs text-[#5E6266] leading-relaxed">
+      <section className="bg-white border border-outline-variant rounded-xl p-8 md:p-12 max-w-3xl mx-auto text-center space-y-4">
+        <span className="text-[10px] font-bold text-brand-accent uppercase tracking-wider block">Guaranteed Alignment</span>
+        <h3 className="font-headline text-lg font-bold text-secondary">Run a historical ledger assessment</h3>
+        <p className="font-sans text-xs text-outline leading-relaxed">
           Unsure which tier matches your exposure levels? Let our risk team process a historical ledger file export to generate a diagnostic summary. We identify outstanding bottlenecks and demonstrate score accuracy before you subscribe.
         </p>
         <div className="pt-2">
           <a
             href="/contact?type=assessment"
-            className="inline-block px-6 py-2.5 bg-[#0F766E] text-white text-xs font-bold uppercase tracking-wider rounded hover:brightness-110"
+            className="inline-block px-6 py-2.5 bg-brand-accent text-white text-xs font-bold uppercase tracking-wider rounded hover:brightness-110"
           >
             Request Ledger Diagnosis
           </a>

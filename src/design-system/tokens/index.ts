@@ -4,6 +4,7 @@ import { typography } from './typography';
 import { radius } from './radius';
 import { borders } from './borders';
 import { elevation } from './elevation';
+import { shadows } from './shadows';
 import { motion } from './motion';
 
 export const tokens = {
@@ -14,6 +15,7 @@ export const tokens = {
   radius,
   borders,
   elevation,
+  shadows,
   motion,
 } as const;
 
@@ -23,4 +25,5 @@ export * from './typography';
 export * from './radius';
 export * from './borders';
 export * from './elevation';
+export * from './shadows';
 export * from './motion';

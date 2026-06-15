@@ -44,7 +44,7 @@ export default function SolutionsPage() {
   ];
 
   return (
-    <div className="space-y-24 py-16 px-6 lg:px-8 bg-[#FAF9F6] text-[#243447]">
+    <div className="space-y-24 py-16 px-6 lg:px-8 bg-background text-secondary">
       {/* Header */}
       <SectionHeader
         tag="Solutions"
@@ -58,10 +58,10 @@ export default function SolutionsPage() {
       </section>
 
       {/* Structured Problem-Solution Matrix */}
-      <section className="bg-white border border-[#E3E2DF] rounded-xl p-8 md:p-12 max-w-[1280px] mx-auto space-y-8">
+      <section className="bg-white border border-outline-variant rounded-xl p-8 md:p-12 max-w-[1280px] mx-auto space-y-8">
         <div className="text-center space-y-2 max-w-2xl mx-auto">
-          <h3 className="font-headline text-lg font-bold text-[#243447]">Active Ledger Verification Framework</h3>
-          <p className="font-sans text-xs text-[#5E6266] leading-relaxed">
+          <h3 className="font-headline text-lg font-bold text-secondary">Active Ledger Verification Framework</h3>
+          <p className="font-sans text-xs text-outline leading-relaxed">
             How Econ-IQ compares to traditional legacy solutions and manual workflows.
           </p>
         </div>
@@ -69,32 +69,32 @@ export default function SolutionsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs font-sans">
             <thead>
-              <tr className="border-b border-[#E3E2DF] text-[#5E6266] uppercase tracking-wider text-[10px] font-bold">
+              <tr className="border-b border-outline-variant text-outline uppercase tracking-wider text-[10px] font-bold">
                 <th className="pb-4 font-bold">Operational Metric</th>
                 <th className="pb-4 font-bold">Spreadsheets & ERP Reports</th>
-                <th className="pb-4 font-bold text-[#0F766E]">Econ-IQ Platform</th>
+                <th className="pb-4 font-bold text-brand-accent">Econ-IQ Platform</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E3E2DF]/50 text-[#243447]">
+            <tbody className="divide-y divide-outline-variant/50 text-secondary">
               <tr>
                 <td className="py-4 font-semibold">Data Refresh Cycle</td>
-                <td className="py-4 text-[#5E6266]">Monthly manual extraction & compile</td>
-                <td className="py-4 font-bold text-[#0F766E]">Continuous server-side synchronization</td>
+                <td className="py-4 text-outline">Monthly manual extraction & compile</td>
+                <td className="py-4 font-bold text-brand-accent">Continuous server-side synchronization</td>
               </tr>
               <tr>
                 <td className="py-4 font-semibold">Risk Assessments</td>
-                <td className="py-4 text-[#5E6266]">Outdated credit reports (30-90 days old)</td>
-                <td className="py-4 font-bold text-[#0F766E]">Live purchase-payment correlation scoring</td>
+                <td className="py-4 text-outline">Outdated credit reports (30-90 days old)</td>
+                <td className="py-4 font-bold text-brand-accent">Live purchase-payment correlation scoring</td>
               </tr>
               <tr>
                 <td className="py-4 font-semibold">Collections Prioritization</td>
-                <td className="py-4 text-[#5E6266]">Sorting by nominal aging buckets (e.g. 30/60/90 days)</td>
-                <td className="py-4 font-bold text-[#0F766E]">Stateful prioritization mapping risk & exposure</td>
+                <td className="py-4 text-outline">Sorting by nominal aging buckets (e.g. 30/60/90 days)</td>
+                <td className="py-4 font-bold text-brand-accent">Stateful prioritization mapping risk & exposure</td>
               </tr>
               <tr>
                 <td className="py-4 font-semibold">Integration Effort</td>
-                <td className="py-4 text-[#5E6266]">Disruptive custom code or legacy consultants</td>
-                <td className="py-4 font-bold text-[#0F766E]">REST APIs or CSV imports setup under 72h</td>
+                <td className="py-4 text-outline">Disruptive custom code or legacy consultants</td>
+                <td className="py-4 font-bold text-brand-accent">REST APIs or CSV imports setup under 72h</td>
               </tr>
             </tbody>
           </table>

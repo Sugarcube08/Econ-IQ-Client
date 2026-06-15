@@ -21,14 +21,14 @@ export default function PublicNavbar() {
   ];
 
   return (
-    <nav className="bg-[#FAF9F6]/80 backdrop-blur-md border-b border-[#E3E2DF] sticky top-0 z-50 w-full transition-all">
+    <nav className="bg-background/80 backdrop-blur-md border-b border-outline-variant sticky top-0 z-50 w-full transition-all">
       <div className="max-w-[1280px] mx-auto px-6 h-20 flex items-center justify-between">
         {/* Branding Logo */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 bg-[#0F766E] rounded flex items-center justify-center text-white font-bold font-headline text-lg shadow-sm transition-transform group-hover:scale-105">
+          <div className="w-9 h-9 bg-brand-accent rounded flex items-center justify-center text-white font-bold font-headline text-lg shadow-sm transition-transform group-hover:scale-105">
             EQ
           </div>
-          <span className="font-headline text-xl font-extrabold text-[#243447] tracking-tight">
+          <span className="font-headline text-xl font-extrabold text-primary tracking-tight">
             Econ-IQ
           </span>
         </Link>
@@ -43,8 +43,8 @@ export default function PublicNavbar() {
                 href={link.path}
                 className={`font-sans text-xs font-semibold uppercase tracking-wider transition-colors ${
                   isActive
-                    ? 'text-[#0F766E]'
-                    : 'text-[#5E6266] hover:text-[#243447]'
+                    ? 'text-brand-accent'
+                    : 'text-outline hover:text-primary'
                 }`}
               >
                 {link.name}
@@ -57,13 +57,13 @@ export default function PublicNavbar() {
         <div className="hidden lg:flex items-center gap-4">
           <Link
             href="/contact?type=demo"
-            className="px-4 py-2 border border-[#0F766E] text-[#0F766E] font-sans font-bold text-xs uppercase tracking-wider rounded hover:bg-[#0F766E]/5 transition-colors"
+            className="px-4 py-2 border border-brand-accent text-brand-accent font-sans font-bold text-xs uppercase tracking-wider rounded hover:bg-brand-accent/5 transition-colors"
           >
             Request Demo
           </Link>
           <Link
             href={isAuthenticated ? '/dashboard' : '/login'}
-            className="px-4 py-2 bg-[#0F766E] text-white font-sans font-bold text-xs uppercase tracking-wider rounded hover:brightness-110 transition-colors shadow-sm"
+            className="px-4 py-2 bg-brand-accent text-white font-sans font-bold text-xs uppercase tracking-wider rounded hover:brightness-110 transition-colors shadow-sm"
           >
             {isAuthenticated ? 'Console' : 'Sign In'}
           </Link>
@@ -72,7 +72,7 @@ export default function PublicNavbar() {
         {/* Mobile menu trigger */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="lg:hidden text-[#243447] p-2 hover:bg-[#E3E2DF]/50 rounded transition-colors"
+          className="lg:hidden text-primary p-2 hover:bg-outline-variant/50 rounded transition-colors"
         >
           <span className="material-symbols-outlined text-[24px]">
             {mobileMenuOpen ? 'close' : 'menu'}
@@ -82,32 +82,32 @@ export default function PublicNavbar() {
 
       {/* Mobile Menu Panel */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-[#FAF9F6] border-b border-[#E3E2DF] px-6 py-6 space-y-4 animate-fade-in">
+        <div className="lg:hidden bg-background border-b border-outline-variant px-6 py-6 space-y-4 animate-fade-in">
           <div className="flex flex-col gap-4">
             {links.map((link) => (
               <Link
                 key={link.name}
                 href={link.path}
                 onClick={() => setMobileMenuOpen(false)}
-                className="font-sans text-sm font-bold text-[#5E6266] hover:text-[#243447]"
+                className="font-sans text-sm font-bold text-outline hover:text-primary"
               >
                 {link.name}
               </Link>
             ))}
           </div>
-          <div className="h-px bg-[#E3E2DF] my-4"></div>
+          <div className="h-px bg-outline-variant my-4"></div>
           <div className="flex flex-col gap-3">
             <Link
               href="/contact?type=demo"
               onClick={() => setMobileMenuOpen(false)}
-              className="w-full text-center py-2.5 border border-[#0F766E] text-[#0F766E] font-sans font-bold text-xs uppercase tracking-wider rounded"
+              className="w-full text-center py-2.5 border border-brand-accent text-brand-accent font-sans font-bold text-xs uppercase tracking-wider rounded"
             >
               Request Demo
             </Link>
             <Link
               href={isAuthenticated ? '/dashboard' : '/login'}
               onClick={() => setMobileMenuOpen(false)}
-              className="w-full text-center py-2.5 bg-[#0F766E] text-white font-sans font-bold text-xs uppercase tracking-wider rounded"
+              className="w-full text-center py-2.5 bg-brand-accent text-white font-sans font-bold text-xs uppercase tracking-wider rounded"
             >
               {isAuthenticated ? 'Go to Console' : 'Sign In'}
             </Link>

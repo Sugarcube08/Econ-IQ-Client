@@ -8,11 +8,70 @@ import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
 import EmptyState from '@/components/ui/EmptyState';
 import { Key, Ban } from 'lucide-react';
+import Table, { TableColumn } from '@/components/ui/Table';
 
 export default function ApiKeysPage() {
   const [keys, setKeys] = useState<APIKey[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const columns: TableColumn<APIKey>[] = [
+    {
+      key: 'name',
+      header: 'Key Description Name',
+      sortable: false,
+      pinned: true,
+      width: 250,
+      render: (k) => <span className="font-semibold text-primary">{k.name}</span>
+    },
+    {
+      key: 'key_prefix',
+      header: 'Prefix',
+      sortable: false,
+      width: 150,
+      render: (k) => <span className="font-mono text-outline">{k.key_prefix}</span>
+    },
+    {
+      key: 'created_at',
+      header: 'Date Issued',
+      sortable: false,
+      width: 150,
+      render: (k) => <span className="text-outline">{new Date(k.created_at).toLocaleDateString()}</span>
+    },
+    {
+      key: 'is_active',
+      header: 'Status',
+      sortable: false,
+      width: 120,
+      render: (k) => (
+        <Badge variant={k.is_active ? 'accent' : 'danger'} size="sm">
+          {k.is_active ? 'Active' : 'Revoked'}
+        </Badge>
+      )
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      sortable: false,
+      align: 'right',
+      width: 100,
+      render: (k) => {
+        if (k.is_active) {
+          return (
+            <Button
+              onClick={() => handleRevoke(k.id)}
+              variant="secondary"
+              size="sm"
+              icon={Ban}
+              title="Revoke Access"
+              className="w-8 h-8 p-0 text-red-600 hover:text-red-700 hover:border-red-300"
+            />
+          );
+        }
+        return null;
+      }
+    }
+  ];
   
   // Creation states
   const [name, setName] = useState('');
@@ -115,7 +174,7 @@ export default function ApiKeysPage() {
           )}
 
           {newRawKey && (
-            <div className="p-md rounded bg-[#243447] text-white space-y-sm font-mono text-[11px] break-all">
+            <div className="p-md rounded bg-secondary text-white space-y-sm font-mono text-[11px] break-all">
               <span className="font-bold text-brand-gold">RAW SECRET KEY:</span>
               <p className="select-all p-xs bg-[#181c1f] rounded text-[#80d5cb] border border-outline-variant/30">
                 {newRawKey}
@@ -169,11 +228,7 @@ export default function ApiKeysPage() {
             <h3 className="font-headline text-sm font-bold text-primary">Registered API Keys</h3>
           </div>
 
-          {isLoading ? (
-            <div className="py-16 text-center text-xs text-outline font-sans animate-pulse">Loading credentials store...</div>
-          ) : error ? (
-            <div className="py-16 text-center text-xs text-error font-sans">{error}</div>
-          ) : keys.length === 0 ? (
+          {keys.length === 0 && !isLoading && !error ? (
             <div className="p-lg">
               <EmptyState
                 icon={Key}
@@ -182,38 +237,13 @@ export default function ApiKeysPage() {
               />
             </div>
           ) : (
-            <div className="divide-y divide-outline-variant/30">
-              {keys.map((k) => (
-                <div key={k.id} className="p-md flex justify-between items-center hover:bg-surface-container-low transition-colors">
-                  <div className="space-y-1">
-                    <h4 className="font-sans text-xs font-bold text-primary">{k.name}</h4>
-                    <div className="flex gap-sm text-[10px] text-outline font-mono">
-                      <span>Prefix: {k.key_prefix}</span>
-                      <span>•</span>
-                      <span>Created: {new Date(k.created_at).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-md">
-                    <Badge
-                      variant={k.is_active ? 'accent' : 'danger'}
-                      size="sm"
-                    >
-                      {k.is_active ? 'Active' : 'Revoked'}
-                    </Badge>
-                    {k.is_active && (
-                      <Button
-                        onClick={() => handleRevoke(k.id)}
-                        variant="secondary"
-                        size="sm"
-                        icon={Ban}
-                        title="Revoke Access"
-                        className="w-8 h-8 p-0 text-red-600 hover:text-red-700 hover:border-red-300"
-                      />
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <Table
+              columns={columns}
+              data={keys}
+              isLoading={isLoading}
+              isError={!!error}
+              errorMessage={error || undefined}
+            />
           )}
         </div>
       </div>

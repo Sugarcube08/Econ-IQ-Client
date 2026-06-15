@@ -1,13 +1,13 @@
 export const colors = {
   light: {
-    background: '#F8F7F4',
+    background: '#FAF9F6',
     surface: '#FFFFFF',
     surfaceContainer: '#EFEEEB',
     surfaceContainerLow: '#F4F3F0',
     surfaceContainerLowest: '#FFFFFF',
     surfaceContainerHigh: '#E9E8E5',
     surfaceContainerHighest: '#E3E2DF',
-    primary: '#161A1D',
+    primary: '#0F766E',      // Semantic Primary
     onPrimary: '#FFFFFF',
     secondary: '#243447',
     onSecondary: '#FFFFFF',
@@ -17,9 +17,10 @@ export const colors = {
     outlineVariant: '#E3E2DF',
     textPrimary: '#111827',
     textSecondary: '#6B7280',
-    success: '#2E7D32',
-    warning: '#B7791F',
-    danger: '#B91C1C',
+    success: '#059669',      // Semantic Success
+    warning: '#D97706',      // Semantic Warning
+    danger: '#DC2626',       // Semantic Danger
+    info: '#2563EB',         // Semantic Info
   },
   dark: {
     background: '#101417',
@@ -39,15 +40,16 @@ export const colors = {
     outlineVariant: '#3E4947',
     textPrimary: '#E0E3E7',
     textSecondary: '#889391',
-    success: '#2E7D32',
-    warning: '#B7791F',
-    danger: '#B91C1C',
+    success: '#059669',
+    warning: '#D97706',
+    danger: '#DC2626',
+    info: '#2563EB',
   },
   charts: {
     purchase: '#0F766E',    // Teal
     payment: '#243447',     // Navy
-    outstanding: '#B7791F', // Amber / Gold-Warning
-    rg: '#B91C1C',          // Muted Red / Danger
+    outstanding: '#D97706', // Amber / Warning
+    rg: '#DC2626',          // Red / Danger
   }
 } as const;
 

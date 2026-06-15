@@ -9,10 +9,62 @@ import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Badge from '@/components/ui/Badge';
 import { Plus, UserMinus } from 'lucide-react';
+import Table, { TableColumn } from '@/components/ui/Table';
 
 export default function UsersPage() {
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
+
+  const columns: TableColumn<User>[] = [
+    {
+      key: 'full_name',
+      header: 'Full Name',
+      sortable: false,
+      pinned: true,
+      width: 200,
+      render: (u) => <span className="font-semibold text-primary">{u.full_name || '(Pending Setup)'}</span>
+    },
+    {
+      key: 'email',
+      header: 'Email Address',
+      sortable: false,
+      width: 250,
+      render: (u) => <span className="text-outline">{u.email}</span>
+    },
+    {
+      key: 'role',
+      header: 'System Role',
+      sortable: false,
+      width: 150,
+      render: (u) => (
+        <Badge variant={u.is_active ? 'accent' : 'danger'} size="sm">
+          {u.role.replace('_', ' ')}
+        </Badge>
+      )
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      sortable: false,
+      align: 'right',
+      width: 100,
+      render: (u) => {
+        if (currentUser?.role === 'SUPER_ADMIN' && u.id !== currentUser.id && u.is_active) {
+          return (
+            <Button
+              onClick={() => handleDeactivate(u.id)}
+              variant="secondary"
+              size="sm"
+              icon={UserMinus}
+              title="Deactivate Account"
+              className="w-8 h-8 p-0"
+            />
+          );
+        }
+        return null;
+      }
+    }
+  ];
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -178,42 +230,13 @@ export default function UsersPage() {
             </form>
           )}
 
-          {isLoading ? (
-            <div className="py-16 text-center text-xs text-outline">Loading database catalog...</div>
-          ) : error ? (
-            <div className="py-16 text-center text-xs text-error">{error}</div>
-          ) : (
-            <div className="divide-y divide-outline-variant/30">
-              {users.map((u) => (
-                <div key={u.id} className="p-md flex justify-between items-center hover:bg-surface-container-low transition-colors">
-                  <div>
-                    <h4 className="font-sans text-xs font-bold text-primary">
-                      {u.full_name || '(Pending Setup)'}
-                    </h4>
-                    <span className="text-[10px] text-outline">{u.email}</span>
-                  </div>
-                  <div className="flex items-center gap-md">
-                    <Badge
-                      variant={u.is_active ? 'accent' : 'danger'}
-                      size="sm"
-                    >
-                      {u.role.replace('_', ' ')}
-                    </Badge>
-                    {currentUser?.role === 'SUPER_ADMIN' && u.id !== currentUser.id && u.is_active && (
-                      <Button
-                        onClick={() => handleDeactivate(u.id)}
-                        variant="secondary"
-                        size="sm"
-                        icon={UserMinus}
-                        title="Deactivate Account"
-                        className="w-8 h-8 p-0"
-                      />
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <Table
+            columns={columns}
+            data={users}
+            isLoading={isLoading}
+            isError={!!error}
+            errorMessage={error || undefined}
+          />
         </div>
       </div>
     </div>

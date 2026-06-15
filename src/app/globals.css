@@ -4,36 +4,39 @@
 
 :root {
   /* Light Theme variables (Dashboard & Analytics) */
-  --surface: #faf9f6;
+  --surface: #ffffff;
   --background: #faf9f6;
-  --on-background: #1a1c1a;
-  --on-surface: #1a1c1a;
-  --surface-container: #efeeeb;
+  --on-background: #0f172a; /* Slate 900 */
+  --on-surface: #0f172a;
+  --surface-container: #f1f5f9; /* Slate 100 */
   --surface-container-lowest: #ffffff;
-  --surface-container-low: #f4f3f0;
-  --surface-container-high: #e9e8e5;
-  --surface-container-highest: #e3e2df;
-  --outline-variant: #c4c7ca;
-  --primary: #000000;
+  --surface-container-low: #f8fafc; /* Slate 50 */
+  --surface-container-high: #e2e8f0; /* Slate 200 */
+  --surface-container-highest: #cbd5e1; /* Slate 300 */
+  --outline-variant: #e2e8f0;
+  --primary: #0f766e; /* Semantic Primary Teal */
   --on-primary: #ffffff;
-  --primary-container: #181c1f;
-  --on-primary-container: #818488;
-  --secondary: #243447;
+  --primary-container: #0f766e;
+  --on-primary-container: #ffffff;
+  --secondary: #1e293b; /* Slate 800 */
   --on-secondary: #ffffff;
-  --secondary-container: #d3e4fd;
-  --on-secondary-container: #56667b;
+  --secondary-container: #e2e8f0;
+  --on-secondary-container: #1e293b;
   --brand-accent: #0f766e;
-  --brand-gold: #c8a96b;
-  --brand-secondary: #243447;
-  --outline: #75777a;
-  --error: #ba1a1a;
-  --error-container: #ffdad6;
+  --brand-gold: #d97706; /* Semantic Warning Amber */
+  --brand-secondary: #1e293b;
+  --outline: #64748b; /* Slate 500 */
+  --error: #dc2626; /* Semantic Danger Red */
+  --error-container: #ffeeeb;
   --on-error: #ffffff;
-  --on-error-container: #93000a;
+  --on-error-container: #dc2626;
+  --success: #059669; /* Semantic Success Green */
+  --warning: #d97706; /* Semantic Warning Amber */
+  --info: #2563eb; /* Semantic Info Blue */
 }
 
 .dark {
-  /* Dark Theme variables (Login & Command Center) */
+  /* Dark Theme variables */
   --surface: #101417;
   --background: #101417;
   --on-background: #e0e3e7;
@@ -60,6 +63,9 @@
   --error-container: #93000a;
   --on-error: #690005;
   --on-error-container: #ffdad6;
+  --success: #059669;
+  --warning: #d97706;
+  --info: #2563eb;
 }
 
 @theme {
@@ -89,6 +95,9 @@
   --color-error-container: var(--error-container);
   --color-on-error: var(--on-error);
   --color-on-error-container: var(--on-error-container);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
 
   /* Spacing */
   --spacing-gutter: 24px;
@@ -125,16 +134,16 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: #cbd5e1; /* Slate 300 */
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: #94a3b8; /* Slate 400 */
 }
 
-/* Animations from Stitch */
+/* Animations */
 .animate-fade-in {
-  animation: fadeIn 0.5s ease-out forwards;
+  animation: fadeIn 0.4s ease-out forwards;
 }
 
 @keyframes fadeIn {

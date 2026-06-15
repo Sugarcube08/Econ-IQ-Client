@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import Button from '@/components/ui/Button';
 
 const emailSchema = z.object({
   email: z.string().email('Invalid corporate email address'),
@@ -19,6 +20,8 @@ export default function LoginPage() {
   const [otpValues, setOtpValues] = useState<string[]>(Array(6).fill(''));
   const otpInputsRef = useRef<HTMLInputElement[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [timerSeconds, setTimerSeconds] = useState(120);
+  const [resendStatus, setResendStatus] = useState<string | null>(null);
 
   const {
     register,
@@ -38,12 +41,33 @@ export default function LoginPage() {
     }
   }, [step]);
 
+  // Handle countdown timer seconds
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (step === 'otp' && timerSeconds > 0) {
+      interval = setInterval(() => {
+        setTimerSeconds((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [step, timerSeconds]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   // Handle email form submission
   const onEmailSubmit = async (values: EmailFormValues) => {
     setErrorMsg(null);
+    setResendStatus(null);
     try {
       await requestOtp.mutateAsync(values.email);
       setEmailInput(values.email);
+      setTimerSeconds(120); // Reset countdown timer
       setStep('otp');
     } catch (e: unknown) {
       let errMsg = 'Failed to request access token.';
@@ -86,17 +110,30 @@ export default function LoginPage() {
   };
 
   // Handle OTP paste
-  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+  const handleOtpPaste = async (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
     const pastedData = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, 6);
     if (pastedData.length === 6) {
       const newOtpValues = pastedData.split('');
       setOtpValues(newOtpValues);
       otpInputsRef.current[5]?.focus();
+      
+      // Auto-trigger verification
+      setErrorMsg(null);
+      try {
+        await verifyOtp.mutateAsync({ email: emailInput, otp: pastedData });
+      } catch (err: unknown) {
+        let errMsg = 'Invalid or expired verification token.';
+        if (err && typeof err === 'object' && 'response' in err) {
+          const res = (err as { response?: { data?: { message?: string } } }).response;
+          if (res?.data?.message) errMsg = res.data.message;
+        }
+        setErrorMsg(errMsg);
+      }
     }
   };
 
-  // Handle OTP validation
+  // Handle OTP verification submit
   const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const fullOtp = otpValues.join('');
@@ -108,11 +145,29 @@ export default function LoginPage() {
     setErrorMsg(null);
     try {
       await verifyOtp.mutateAsync({ email: emailInput, otp: fullOtp });
-      // Redirect happens in the layout guards automatically
     } catch (err: unknown) {
       let errMsg = 'Invalid or expired verification token.';
       if (err && typeof err === 'object' && 'response' in err) {
         const res = (err as { response?: { data?: { message?: string } } }).response;
+        if (res?.data?.message) errMsg = res.data.message;
+      }
+      setErrorMsg(errMsg);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (timerSeconds > 0) return;
+    setErrorMsg(null);
+    setResendStatus(null);
+    try {
+      await requestOtp.mutateAsync(emailInput);
+      setTimerSeconds(120); // Reset timer
+      setResendStatus('A new access code has been dispatched.');
+      setTimeout(() => setResendStatus(null), 3000);
+    } catch (e: unknown) {
+      let errMsg = 'Failed to resend access token.';
+      if (e && typeof e === 'object' && 'response' in e) {
+        const res = (e as { response?: { data?: { message?: string } } }).response;
         if (res?.data?.message) errMsg = res.data.message;
       }
       setErrorMsg(errMsg);
@@ -157,8 +212,14 @@ export default function LoginPage() {
             </div>
 
             {errorMsg && (
-              <div className="mb-6 p-4 rounded-lg bg-error-container/20 border border-error/50 text-error text-xs">
+              <div className="mb-6 p-4 rounded-lg bg-error-container/20 border border-error/50 text-error text-xs font-semibold">
                 {errorMsg}
+              </div>
+            )}
+
+            {resendStatus && (
+              <div className="mb-6 p-4 rounded-lg bg-brand-accent/10 border border-brand-accent/30 text-brand-accent text-xs font-semibold">
+                {resendStatus}
               </div>
             )}
 
@@ -172,30 +233,27 @@ export default function LoginPage() {
                     <input
                       {...register('email')}
                       id="email"
-                      className="w-full bg-background border border-outline-variant rounded-lg px-4 py-3 text-on-surface font-sans text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-outline"
+                      className="w-full bg-background border border-outline-variant rounded-lg px-4 py-3 text-on-surface font-sans text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-outline/60"
                       placeholder="name@company.com"
                       required
                       type="email"
                     />
-                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none opacity-40 group-focus-within:opacity-100 transition-opacity">
-                      <span className="material-symbols-outlined text-primary">mail</span>
-                    </div>
                   </div>
                   {errors.email && (
                     <span className="text-error text-xs block">{errors.email.message}</span>
                   )}
                 </div>
 
-                <button
+                <Button
                   type="submit"
                   disabled={requestOtp.isPending}
-                  className="w-full bg-[#161A1D] text-white hover:bg-[#161A1D]/90 font-headline font-semibold text-base h-14 flex items-center justify-center rounded-lg hover:brightness-110 active:scale-[0.98] transition-all duration-200 cursor-pointer disabled:opacity-50"
+                  variant="primary"
+                  className="w-full h-14"
                 >
                   {requestOtp.isPending ? 'Sending...' : 'Request Access Token'}
-                </button>
+                </Button>
 
                 <div className="pt-4 flex items-center justify-center gap-2 border-t border-outline-variant/30">
-                  <span className="material-symbols-outlined text-primary text-[18px]">verified_user</span>
                   <span className="font-sans text-xs text-outline">
                     End-to-End Encrypted Authentication
                   </span>
@@ -204,9 +262,14 @@ export default function LoginPage() {
             ) : (
               <form onSubmit={handleOtpSubmit} className="space-y-6">
                 <div className="space-y-2">
-                  <label className="font-sans text-xs text-outline block uppercase tracking-wider font-semibold">
-                    Verification Token
-                  </label>
+                  <div className="flex justify-between items-center">
+                    <label className="font-sans text-xs text-outline block uppercase tracking-wider font-semibold">
+                      Verification Token
+                    </label>
+                    <span className="font-mono text-xs text-brand-accent font-semibold">
+                      {formatTime(timerSeconds)}
+                    </span>
+                  </div>
                   <div className="flex justify-between gap-2">
                     {otpValues.map((digit, index) => (
                       <input
@@ -224,27 +287,48 @@ export default function LoginPage() {
                       />
                     ))}
                   </div>
+                  <div className="pt-2 text-[10px] text-outline flex justify-between">
+                    <span>* Default Mock OTP: 735011</span>
+                    <span>Expires in 2m</span>
+                  </div>
                 </div>
 
-                <button
+                <Button
                   type="submit"
                   disabled={verifyOtp.isPending}
-                  className="w-full bg-[#161A1D] text-white hover:bg-[#161A1D]/90 font-headline font-semibold text-base h-14 flex items-center justify-center rounded-lg hover:brightness-110 active:scale-[0.98] transition-all duration-200 cursor-pointer disabled:opacity-50"
+                  variant="primary"
+                  className="w-full h-14"
                 >
                   {verifyOtp.isPending ? 'Validating...' : 'Validate Identity'}
-                </button>
+                </Button>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStep('email');
-                    setOtpValues(Array(6).fill(''));
-                    setErrorMsg(null);
-                  }}
-                  className="w-full text-outline font-sans text-xs hover:text-primary transition-colors cursor-pointer"
-                >
-                  Did not receive a token? Try again
-                </button>
+                <div className="flex flex-col gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={handleResendOtp}
+                    disabled={timerSeconds > 0 || requestOtp.isPending}
+                    className={`w-full font-sans text-xs font-semibold uppercase tracking-wider text-center transition-all ${
+                      timerSeconds > 0
+                        ? 'text-outline/40 cursor-not-allowed'
+                        : 'text-brand-accent hover:underline cursor-pointer'
+                    }`}
+                  >
+                    {timerSeconds > 0 ? `Resend code in ${formatTime(timerSeconds)}` : 'Resend Access Code'}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStep('email');
+                      setOtpValues(Array(6).fill(''));
+                      setErrorMsg(null);
+                      setResendStatus(null);
+                    }}
+                    className="w-full text-outline font-sans text-xs hover:text-primary transition-colors cursor-pointer"
+                  >
+                    Change email address
+                  </button>
+                </div>
               </form>
             )}
           </div>

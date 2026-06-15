@@ -4,8 +4,7 @@ import React, { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useOnboardingStore } from '@/stores/useOnboardingStore';
-import Sidebar from '@/components/sidebar';
-import TopBar from '@/components/topbar';
+import AppShell from '@/components/layout/AppShell';
 import PublicNavbar from '@/components/marketing/Navbar';
 import PublicFooter from '@/components/marketing/Footer';
 
@@ -34,7 +33,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   ];
   const isPublicRoute = publicRoutes.includes(pathname);
 
-  // Authenticated internal routes
   const isAuthRoute = [
     '/dashboard',
     '/users',
@@ -43,7 +41,12 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     '/reports',
     '/organization',
     '/organization/users/invite'
-  ].includes(pathname) || pathname.startsWith('/customer/');
+  ].includes(pathname) || 
+    pathname.startsWith('/customer/') ||
+    pathname.startsWith('/customers/') ||
+    pathname.startsWith('/intelligence/') ||
+    pathname.startsWith('/collections/') ||
+    pathname.startsWith('/analytics/');
 
   // The customers path is split: if authenticated, it maps to the matrix; if unauthenticated, it maps to marketing
   const isCustomersMatrix = pathname === '/customers' && isAuthenticated;
@@ -131,17 +134,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     }
 
     return (
-      <div className="min-h-screen flex bg-background text-on-background">
-        <Sidebar />
-        <div className="flex-1 flex flex-col min-h-screen md:pl-0">
-          <TopBar title={title} />
-          <main className="flex-grow md:ml-sidebar-width p-md md:p-lg lg:p-xl overflow-x-hidden">
-            <div className="max-w-container-max mx-auto animate-fade-in">
-              {children}
-            </div>
-          </main>
-        </div>
-      </div>
+      <AppShell>
+        {children}
+      </AppShell>
     );
   }
 

@@ -4,15 +4,15 @@ export const typography = {
     headline: "var(--font-headline)",
   },
   sizes: {
-    display: 'text-4xl lg:text-5xl font-black font-headline tracking-tight',
-    h1: 'text-3xl lg:text-4xl font-extrabold font-headline tracking-tight',
-    h2: 'text-2xl font-bold font-headline tracking-tight',
-    h3: 'text-xl font-bold font-headline',
-    h4: 'text-base font-semibold font-headline',
-    body: 'text-sm font-normal font-sans leading-relaxed',
-    bodySmall: 'text-xs font-normal font-sans leading-relaxed',
-    label: 'text-xs font-bold font-sans uppercase tracking-wider',
-    caption: 'text-[10px] font-medium font-sans text-neutral-500 uppercase tracking-widest',
+    display: 'text-[40px] font-black font-headline tracking-tight leading-tight',
+    h1: 'text-[32px] font-extrabold font-headline tracking-tight leading-snug',
+    h2: 'text-[24px] font-bold font-headline tracking-tight leading-normal',
+    h3: 'text-[20px] font-bold font-headline leading-normal',
+    h4: 'text-[18px] font-semibold font-headline leading-normal',
+    body: 'text-[16px] font-normal font-sans leading-relaxed',
+    bodySmall: 'text-[14px] font-normal font-sans leading-relaxed',
+    label: 'text-[14px] font-bold font-sans uppercase tracking-wider',
+    caption: 'text-[12px] font-medium font-sans text-neutral-500 uppercase tracking-widest',
   }
 } as const;
 

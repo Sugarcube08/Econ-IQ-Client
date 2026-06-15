@@ -32,7 +32,7 @@ export default function GlobalErrorBoundary({
         </div>
 
         {error.message && (
-          <div className="p-md rounded bg-[#243447] text-left border border-outline-variant/30 text-xs font-mono break-all text-error">
+          <div className="p-md rounded bg-secondary text-left border border-outline-variant/30 text-xs font-mono break-all text-error">
             <span className="font-semibold text-brand-gold block mb-1">Telemetry Exception:</span>
             {error.message}
           </div>

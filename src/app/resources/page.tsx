@@ -91,7 +91,7 @@ export default function ResourcesPage() {
   });
 
   return (
-    <div className="space-y-24 py-16 px-6 lg:px-8 bg-[#FAF9F6] text-[#243447]">
+    <div className="space-y-24 py-16 px-6 lg:px-8 bg-background text-secondary">
       {/* Header */}
       <SectionHeader
         tag="Publications"
@@ -113,8 +113,8 @@ export default function ResourcesPage() {
                 }}
                 className={`px-3 py-1.5 rounded text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer ${
                   activeCategory === c
-                    ? 'bg-[#0F766E] text-white'
-                    : 'bg-white border border-[#E3E2DF] text-[#5E6266] hover:text-[#243447]'
+                    ? 'bg-brand-accent text-white'
+                    : 'bg-white border border-outline-variant text-outline hover:text-secondary'
                 }`}
               >
                 {c}
@@ -124,7 +124,7 @@ export default function ResourcesPage() {
 
           {/* Search Box */}
           <div className="relative w-full md:w-80 shrink-0">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#5E6266] text-[18px]">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">
               search
             </span>
             <input
@@ -134,7 +134,7 @@ export default function ResourcesPage() {
                 setSearchQuery(e.target.value);
                 setExpandedArticle(null);
               }}
-              className="w-full bg-white border border-[#E3E2DF] pl-10 pr-4 py-2 rounded text-xs text-[#243447] focus:outline-none focus:border-[#0F766E]"
+              className="w-full bg-white border border-outline-variant pl-10 pr-4 py-2 rounded text-xs text-secondary focus:outline-none focus:border-brand-accent"
               placeholder="Search publications..."
             />
           </div>
@@ -142,7 +142,7 @@ export default function ResourcesPage() {
 
         {/* Article Grid */}
         {filteredArticles.length === 0 ? (
-          <div className="text-center py-20 text-xs text-[#5E6266] font-sans bg-white border border-[#E3E2DF] rounded-xl">
+          <div className="text-center py-20 text-xs text-outline font-sans bg-white border border-outline-variant rounded-xl">
             No publications matched your search criteria.
           </div>
         ) : (
@@ -152,24 +152,24 @@ export default function ResourcesPage() {
               return (
                 <div
                   key={art.id}
-                  className="bg-white rounded-xl border border-[#E3E2DF] shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col justify-between"
+                  className="bg-white rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col justify-between"
                 >
                   <div className="p-8 space-y-4">
-                    <div className="flex justify-between items-center text-[10px] font-bold text-[#0F766E] uppercase tracking-wider">
+                    <div className="flex justify-between items-center text-[10px] font-bold text-brand-accent uppercase tracking-wider">
                       <span>{art.category}</span>
-                      <span className="text-[#5E6266]">{art.readTime}</span>
+                      <span className="text-outline">{art.readTime}</span>
                     </div>
 
-                    <h3 className="font-headline text-base font-bold text-[#243447] tracking-tight leading-snug">
+                    <h3 className="font-headline text-base font-bold text-secondary tracking-tight leading-snug">
                       {art.title}
                     </h3>
                     
-                    <p className="font-sans text-xs text-[#5E6266] leading-relaxed">
+                    <p className="font-sans text-xs text-outline leading-relaxed">
                       {art.description}
                     </p>
 
                     {isExpanded && (
-                      <div className="pt-4 border-t border-[#E3E2DF]/60 text-xs text-[#5E6266] leading-relaxed font-sans space-y-3 animate-fade-in">
+                      <div className="pt-4 border-t border-outline-variant/60 text-xs text-outline leading-relaxed font-sans space-y-3 animate-fade-in">
                         <p>{art.excerpt}</p>
                         <div className="pt-2 flex justify-between items-center text-[10px] text-outline font-semibold">
                           <span>By {art.author}</span>
@@ -179,10 +179,10 @@ export default function ResourcesPage() {
                     )}
                   </div>
 
-                  <div className="p-8 pt-0 border-t border-[#E3E2DF]/40 flex justify-between items-center">
+                  <div className="p-8 pt-0 border-t border-outline-variant/40 flex justify-between items-center">
                     <button
                       onClick={() => setExpandedArticle(isExpanded ? null : art.id)}
-                      className="text-xs font-bold text-[#0F766E] uppercase tracking-wider hover:underline flex items-center gap-1 cursor-pointer"
+                      className="text-xs font-bold text-brand-accent uppercase tracking-wider hover:underline flex items-center gap-1 cursor-pointer"
                     >
                       {isExpanded ? 'Collapse Abstract' : 'Read Abstract'}
                       <span className="material-symbols-outlined text-[14px]">
@@ -199,11 +199,11 @@ export default function ResourcesPage() {
       </section>
 
       {/* Publications expansion callout */}
-      <section className="bg-white border border-[#E3E2DF] rounded-xl p-8 md:p-12 max-w-[1280px] mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
+      <section className="bg-white border border-outline-variant rounded-xl p-8 md:p-12 max-w-[1280px] mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
         <div className="space-y-2">
-          <span className="text-[10px] font-bold text-[#0F766E] uppercase tracking-wider block">Publications Feed</span>
-          <h3 className="font-headline text-lg font-bold text-[#243447]">Subscribe to Our Risk Analytics Feed</h3>
-          <p className="font-sans text-xs text-[#5E6266] leading-relaxed max-w-xl">
+          <span className="text-[10px] font-bold text-brand-accent uppercase tracking-wider block">Publications Feed</span>
+          <h3 className="font-headline text-lg font-bold text-secondary">Subscribe to Our Risk Analytics Feed</h3>
+          <p className="font-sans text-xs text-outline leading-relaxed max-w-xl">
             Get technical briefs and integration case studies written by our engineering and analytics groups.
           </p>
         </div>
@@ -211,9 +211,9 @@ export default function ResourcesPage() {
           <input
             type="email"
             placeholder="corporate@company.com"
-            className="bg-[#FAF9F6] border border-[#E3E2DF] rounded px-4 py-2.5 text-xs text-[#243447] focus:outline-none w-full md:w-64"
+            className="bg-background border border-outline-variant rounded px-4 py-2.5 text-xs text-secondary focus:outline-none w-full md:w-64"
           />
-          <button className="bg-[#0F766E] text-white text-xs font-bold uppercase tracking-wider px-6 py-2.5 rounded shrink-0 hover:brightness-110 cursor-pointer">
+          <button className="bg-brand-accent text-white text-xs font-bold uppercase tracking-wider px-6 py-2.5 rounded shrink-0 hover:brightness-110 cursor-pointer">
             Subscribe
           </button>
         </div>

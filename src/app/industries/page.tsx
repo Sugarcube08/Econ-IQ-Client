@@ -50,7 +50,7 @@ export default function IndustriesPage() {
   ];
 
   return (
-    <div className="space-y-24 py-16 px-6 lg:px-8 bg-[#FAF9F6] text-[#243447]">
+    <div className="space-y-24 py-16 px-6 lg:px-8 bg-background text-secondary">
       {/* Header */}
       <SectionHeader
         tag="Industries"
@@ -64,50 +64,50 @@ export default function IndustriesPage() {
       </section>
 
       {/* Integration Detail Section */}
-      <section className="bg-white border border-[#E3E2DF] rounded-xl p-8 md:p-12 max-w-[1280px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <section className="bg-white border border-outline-variant rounded-xl p-8 md:p-12 max-w-[1280px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div className="space-y-6">
-          <span className="text-[10px] font-bold text-[#0F766E] uppercase tracking-wider block">Enterprise Standard</span>
-          <h3 className="font-headline text-xl font-extrabold text-[#243447]">Compatible with your existing ERP</h3>
-          <p className="font-sans text-xs text-[#5E6266] leading-relaxed">
+          <span className="text-[10px] font-bold text-brand-accent uppercase tracking-wider block">Enterprise Standard</span>
+          <h3 className="font-headline text-xl font-extrabold text-secondary">Compatible with your existing ERP</h3>
+          <p className="font-sans text-xs text-outline leading-relaxed">
             Econ-IQ does not replace your ERP ledger records or billing systems. We sit on top of your existing infrastructure, reading transaction histories securely via database reads or automated flat-file CSV dumps to extract active analytics.
           </p>
-          <div className="grid grid-cols-2 gap-4 text-xs font-semibold text-[#243447]">
+          <div className="grid grid-cols-2 gap-4 text-xs font-semibold text-secondary">
             <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[#0F766E] text-[18px]">check_circle</span>
+              <span className="material-symbols-outlined text-brand-accent text-[18px]">check_circle</span>
               <span>SAP & Oracle Compatible</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[#0F766E] text-[18px]">check_circle</span>
+              <span className="material-symbols-outlined text-brand-accent text-[18px]">check_circle</span>
               <span>NetSuite & Dynamics Integration</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[#0F766E] text-[18px]">check_circle</span>
+              <span className="material-symbols-outlined text-brand-accent text-[18px]">check_circle</span>
               <span>Flat-file CSV / Excel Importers</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[#0F766E] text-[18px]">check_circle</span>
+              <span className="material-symbols-outlined text-brand-accent text-[18px]">check_circle</span>
               <span>72-Hour Deployment Timeframe</span>
             </div>
           </div>
         </div>
         
         {/* Right side illustration representing compatibility */}
-        <div className="bg-[#FAF9F6] p-8 rounded-lg border border-[#E3E2DF]/60 space-y-4">
-          <span className="text-[10px] text-[#5E6266] uppercase font-bold tracking-wider block">Data Flow Connectivity</span>
-          <div className="space-y-2 font-mono text-[10px] text-[#243447]">
-            <div className="p-2 bg-white rounded border border-[#E3E2DF] flex justify-between items-center">
+        <div className="bg-background p-8 rounded-lg border border-outline-variant/60 space-y-4">
+          <span className="text-[10px] text-outline uppercase font-bold tracking-wider block">Data Flow Connectivity</span>
+          <div className="space-y-2 font-mono text-[10px] text-secondary">
+            <div className="p-2 bg-white rounded border border-outline-variant flex justify-between items-center">
               <span>ERP Invoice Registers</span>
-              <span className="text-[#0F766E] font-bold">Connect</span>
+              <span className="text-brand-accent font-bold">Connect</span>
             </div>
-            <div className="p-2 bg-white rounded border border-[#E3E2DF] flex justify-between items-center">
+            <div className="p-2 bg-white rounded border border-outline-variant flex justify-between items-center">
               <span>Historical Payment Ledger</span>
-              <span className="text-[#0F766E] font-bold">Connect</span>
+              <span className="text-brand-accent font-bold">Connect</span>
             </div>
-            <div className="p-2 bg-white rounded border border-[#E3E2DF] flex justify-between items-center">
+            <div className="p-2 bg-white rounded border border-outline-variant flex justify-between items-center">
               <span>Econ-IQ Scoring Engine</span>
-              <span className="text-[#0F766E] font-bold">Processing</span>
+              <span className="text-brand-accent font-bold">Processing</span>
             </div>
-            <div className="p-2 bg-[#0F766E]/10 rounded border border-[#0F766E]/20 flex justify-between items-center text-[#0F766E]">
+            <div className="p-2 bg-brand-accent/10 rounded border border-brand-accent/20 flex justify-between items-center text-brand-accent">
               <span>Predictive Term Adjustments</span>
               <span className="material-symbols-outlined text-[14px] animate-spin">sync</span>
             </div>
