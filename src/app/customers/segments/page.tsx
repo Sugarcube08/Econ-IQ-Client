@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCustomers } from '@/hooks/useCustomer';
+import { useCustomers } from '@/hooks/queries/useCustomers';
 import { formatCurrency } from '@/lib/utils';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 

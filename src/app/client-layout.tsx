@@ -45,7 +45,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     pathname.startsWith('/customer/') ||
     pathname.startsWith('/customers/') ||
     pathname.startsWith('/intelligence/') ||
-    pathname.startsWith('/collections/') ||
+    pathname.startsWith('/operations/') ||
     pathname.startsWith('/analytics/');
 
   // The customers path is split: if authenticated, it maps to the matrix; if unauthenticated, it maps to marketing

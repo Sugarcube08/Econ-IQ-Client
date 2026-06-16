@@ -9,6 +9,8 @@ import {
   useDashboardQueues,
   useActivitySummary,
 } from '@/hooks/useDashboard';
+import { useAlerts } from '@/hooks/queries/useAlerts';
+import { useAcknowledgeAlert } from '@/hooks/mutations/useAcknowledgeAlert';
 import { formatCurrency, formatPercent, formatDate } from '@/lib/utils';
 import { useOnboardingStore } from '@/stores/useOnboardingStore';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
@@ -94,6 +96,8 @@ function DashboardPageContent() {
   const { commercialFlow, agingDistribution, stateDistribution, isLoading: isChartsLoading } = useDashboardCharts();
   const { deteriorating, improving, highRisk, isLoading: isQueuesLoading } = useDashboardQueues();
   const { data: activitySummary, isLoading: isActivityLoading } = useActivitySummary();
+  const { data: alertsData } = useAlerts({ status: 'ACTIVE', limit: 5 });
+  const acknowledgeMutation = useAcknowledgeAlert();
 
   useEffect(() => {
     if (checklist.orgSetup && checklist.firstSync && !completedTour && tourStep === null) {
@@ -256,69 +260,20 @@ function DashboardPageContent() {
   const growthOpportunitiesCount = (improving?.data || []).length || 6;
   const attentionRequiredCount = ((deteriorating?.data || []).length || 5) + collectionsNeededCount;
 
-  // Re-build Intelligence alerts to match exactly the required examples:
-  // 🔴 Payment delays worsening
-  // 🟠 Outstanding increasing
-  // 🟢 Growth accelerating
-  // 🔴 Customer inactive
-  // 🟠 Return behavior abnormal
-  const structuredIntelligenceAlerts = [
-    {
-      id: 'alert_1',
-      alert_type: 'CRITICAL_RISK',
-      customer_name: 'Standard Steel Castings Ltd.',
-      customer_id: 'cust_std_steel_9918',
-      message: 'Payment delays worsening: DSO exceeded 45 days. Invoices aging rapidly in the 30-60 day bucket. Immediate credit limit hold recommended.',
-      timestamp: new Date().toISOString(),
-      exposure: 124500,
-      recommendation: 'Tighten payment terms to Net-15 immediately and freeze additional order dispatches.',
-      bullet: '🔴'
-    },
-    {
-      id: 'alert_2',
-      alert_type: 'MAJOR_WARNING',
-      customer_name: 'Apex Logistics & Wholesale',
-      customer_id: 'cust_apex_log_2209',
-      message: 'Outstanding balance increasing: Credit utilization surged by 38% within 14 days, outpacing historical payment clearance rates.',
-      timestamp: new Date(Date.now() - 3600000).toISOString(),
-      exposure: 85200,
-      recommendation: 'Review credit utilization ratio and trigger proactive billing reminders.',
-      bullet: '🟠'
-    },
-    {
-      id: 'alert_3',
-      alert_type: 'OPPORTUNITY',
-      customer_name: 'Metals Trading Alliance',
-      customer_id: 'cust_metals_trade_1044',
-      message: 'Growth accelerating: Prompt settlements achieved on last 6 orders. Calculated trust score is 94%, indicating low default probability.',
-      timestamp: new Date(Date.now() - 7200000).toISOString(),
-      exposure: 240000,
-      recommendation: 'Qualified for automatic credit limit extension of $50,000 to capture expansion.',
-      bullet: '🟢'
-    },
-    {
-      id: 'alert_4',
-      alert_type: 'CRITICAL_RISK',
-      customer_name: 'Vohra-Dugal FMCG Corp.',
-      customer_id: 'cust_vohra_dugal_5671',
-      message: 'Customer inactive: No ordering activity recorded for 60 consecutive days. Risk score has deteriorated due to severe contract contraction.',
-      timestamp: new Date(Date.now() - 14400000).toISOString(),
-      exposure: 0,
-      recommendation: 'Dispatch relationship manager follow-up and verify operational status.',
-      bullet: '🔴'
-    },
-    {
-      id: 'alert_5',
-      alert_type: 'MAJOR_WARNING',
-      customer_name: 'Superb Wholesale Distributors',
-      customer_id: 'cust_superb_dist_8003',
-      message: 'Return behavior abnormal: Return volume increased by 2.5x compared to monthly average. Credit adjustments pending dispute resolution.',
-      timestamp: new Date(Date.now() - 28800000).toISOString(),
-      exposure: 45000,
-      recommendation: 'Pause automatic order clearances pending invoice audits and reconciliation.',
-      bullet: '🟠'
-    }
-  ];
+  // Re-build Intelligence alerts from live Alerts API
+  const structuredIntelligenceAlerts = React.useMemo(() => {
+    return (Array.isArray(alertsData) ? alertsData : []).map(alert => ({
+      id: alert.id,
+      alert_type: alert.alert_severity === 'CRITICAL' ? 'CRITICAL_RISK' : 'MAJOR_WARNING',
+      customer_name: alert.customer_id,
+      customer_id: alert.customer_id,
+      message: `${alert.title}: ${alert.description}`,
+      timestamp: alert.created_at,
+      exposure: undefined,
+      recommendation: `Status: ${alert.status}`,
+      bullet: alert.alert_severity === 'CRITICAL' ? '🔴' : '🟠'
+    }));
+  }, [alertsData]);
 
   // Collection Priorities Table Rows (ranked by risk score/exposure)
   const collectionsData = (Array.isArray(highRisk?.data) ? highRisk.data : []).map(item => ({
@@ -621,13 +576,13 @@ function DashboardPageContent() {
                     timestamp={item.timestamp}
                     exposure={item.exposure}
                     recommendation={item.recommendation}
-                    onAction={(id, act) => {
-                      if (act === 'adjust_terms') {
-                        alert(`Updating credit policy parameters for ${item.customer_name}`);
-                      } else if (act === 'dispatch_warning') {
-                        alert(`Warning documentation dispatched to ${item.customer_name}`);
-                      } else if (act === 'acknowledge') {
-                        alert(`Alert acknowledged and archived.`);
+                    onAction={async (id, act) => {
+                      if (act === 'acknowledge') {
+                        try {
+                          await acknowledgeMutation.mutateAsync(id);
+                        } catch (err) {
+                          console.error('Failed to acknowledge alert:', err);
+                        }
                       }
                     }}
                   />
@@ -760,7 +715,7 @@ function DashboardPageContent() {
                 </p>
               </div>
               <Link
-                href="/collections/queue"
+                href="/operations/collections"
                 className="text-xs font-bold text-teal-600 hover:underline uppercase tracking-wider flex items-center gap-1 shrink-0 font-sans"
               >
                 Queue <ArrowRight className="w-3.5 h-3.5" />

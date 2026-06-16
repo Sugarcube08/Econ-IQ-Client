@@ -24,7 +24,8 @@ import {
   LogOut,
   ChevronsUpDown,
   Plus,
-  X
+  X,
+  Sliders
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -66,6 +67,14 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       ]
     },
     {
+      title: 'Operations',
+      items: [
+        { name: 'Alerts Center', path: '/operations/alerts', icon: AlertTriangle },
+        { name: 'Collections Center', path: '/operations/collections', icon: Briefcase },
+        { name: 'Decisions Center', path: '/operations/decisions', icon: Sliders },
+      ]
+    },
+    {
       title: 'Customers',
       items: [
         { name: 'All Customers', path: '/customers', icon: Users },
@@ -75,16 +84,8 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     {
       title: 'Intelligence',
       items: [
-        { name: 'Alerts', path: '/intelligence/alerts', icon: AlertTriangle },
         { name: 'Risk Signals', path: '/intelligence/risk-signals', icon: Flame },
         { name: 'Opportunities', path: '/intelligence/opportunities', icon: Zap },
-      ]
-    },
-    {
-      title: 'Collections',
-      items: [
-        { name: 'Collection Queue', path: '/collections/queue', icon: Briefcase },
-        { name: 'Overdue Analysis', path: '/collections/overdue', icon: Clock },
       ]
     },
     {

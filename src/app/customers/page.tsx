@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCustomers } from '@/hooks/useCustomer';
+import { useCustomers } from '@/hooks/queries/useCustomers';
 import { ReportService } from '@/services/report.service';
 import { formatCurrency, formatPercent, formatDate } from '@/lib/utils';
 import { useAuthStore } from '@/stores/useAuthStore';

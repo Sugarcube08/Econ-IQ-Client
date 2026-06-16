@@ -8,7 +8,7 @@ import {
 } from '@/types/customer';
 import { StandardResponse } from '@/types/response';
 
-export const CustomerService = {
+export const CustomersService = {
   async getCustomers(params: {
     page?: number;
     limit?: number;
@@ -81,3 +81,6 @@ export const CustomerService = {
     return res.data;
   },
 };
+
+// Maintain alias for import compatibility
+export const CustomerService = CustomersService;
