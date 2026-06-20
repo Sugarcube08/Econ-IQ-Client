@@ -6,7 +6,6 @@ import { useDashboardCharts, useDashboardQueues } from '@/hooks/useDashboard';
 import { formatCurrency, formatPercent } from '@/lib/utils';
 import Table, { TableColumn } from '@/components/ui/Table';
 import Badge from '@/components/ui/Badge';
-import Chart from '@/components/ui/Chart';
 import { ShieldAlert, ArrowRight, PieChart } from 'lucide-react';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 

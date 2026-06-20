@@ -71,3 +71,11 @@ export function useTopContributors() {
     queryFn: () => DashboardService.getTopContributors().then((res) => res.data),
   });
 }
+
+export function useDashboardGraphs(windowDays: number = 365, granularity = 'monthly') {
+  const params = { window_days: windowDays, granularity };
+  return useQuery({
+    queryKey: ['dashboard-graphs', params],
+    queryFn: () => DashboardService.getGraphs(params).then((res) => res.data.timeline),
+  });
+}

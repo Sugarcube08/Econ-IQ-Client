@@ -25,6 +25,13 @@ export const DashboardService = {
     return res.data;
   },
 
+  async getGraphs(params?: { window_days?: number; granularity?: string }): Promise<StandardResponse<{ timeline: any[] }>> {
+    const res = await apiClient.get<StandardResponse<{ timeline: any[] }>>('/dashboard/graphs', {
+      params,
+    });
+    return res.data;
+  },
+
   async getAgingDistribution(): Promise<StandardResponse<AgingDistribution>> {
     const res = await apiClient.get<StandardResponse<AgingDistribution>>('/dashboard/aging-distribution');
     return res.data;

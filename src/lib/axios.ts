@@ -80,10 +80,19 @@ apiClient.interceptors.response.use(
           refresh_token: refreshToken,
         });
 
-        const { access_token, refresh_token: newRefreshToken, user } = res.data.data;
+        const { access_token, refresh_token: newRefreshToken } = res.data.data;
+        const currentUser = useAuthStore.getState().user;
 
         // Update stores
-        useAuthStore.getState().setSession(access_token, newRefreshToken, user);
+        if (currentUser) {
+          useAuthStore.getState().setSession(access_token, newRefreshToken, currentUser);
+        } else {
+          useAuthStore.getState().updateAccessToken(access_token);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('econ_refresh_token', newRefreshToken);
+          }
+          useAuthStore.setState({ refreshToken: newRefreshToken });
+        }
 
         processQueue(null, access_token);
         

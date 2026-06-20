@@ -41,41 +41,11 @@ export const CustomersService = {
     return res.data;
   },
 
-  async getPurchaseGraph(
+  async getGraphs(
     id: string,
     params?: { window_days?: number; granularity?: string }
-  ): Promise<StandardResponse<{ graph: GraphPoint[] }>> {
-    const res = await apiClient.get<StandardResponse<{ graph: GraphPoint[] }>>(`/customer/${id}/purchase-graph`, {
-      params,
-    });
-    return res.data;
-  },
-
-  async getPaymentGraph(
-    id: string,
-    params?: { window_days?: number; granularity?: string }
-  ): Promise<StandardResponse<{ graph: GraphPoint[] }>> {
-    const res = await apiClient.get<StandardResponse<{ graph: GraphPoint[] }>>(`/customer/${id}/payment-graph`, {
-      params,
-    });
-    return res.data;
-  },
-
-  async getRgGraph(
-    id: string,
-    params?: { window_days?: number; granularity?: string }
-  ): Promise<StandardResponse<{ graph: GraphPoint[] }>> {
-    const res = await apiClient.get<StandardResponse<{ graph: GraphPoint[] }>>(`/customer/${id}/rg-graph`, {
-      params,
-    });
-    return res.data;
-  },
-
-  async getOutstandingGraph(
-    id: string,
-    params?: { window_days?: number; granularity?: string }
-  ): Promise<StandardResponse<{ graph: GraphPoint[] }>> {
-    const res = await apiClient.get<StandardResponse<{ graph: GraphPoint[] }>>(`/customer/${id}/outstanding-graph`, {
+  ): Promise<StandardResponse<{ timeline: any[] }>> {
+    const res = await apiClient.get<StandardResponse<{ timeline: any[] }>>(`/customer/${id}/graphs`, {
       params,
     });
     return res.data;

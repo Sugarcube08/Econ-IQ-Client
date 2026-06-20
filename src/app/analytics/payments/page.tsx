@@ -2,15 +2,15 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useDashboardCharts, useDashboardQueues } from '@/hooks/useDashboard';
+import { useDashboardGraphs, useDashboardQueues } from '@/hooks/useDashboard';
 import { formatCurrency, formatPercent } from '@/lib/utils';
 import Table, { TableColumn } from '@/components/ui/Table';
-import Chart from '@/components/ui/Chart';
+import UnifiedBehaviorGraph from '@/components/ui/UnifiedBehaviorGraph';
 import { DollarSign, ArrowRight } from 'lucide-react';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 
 function PaymentAnalyticsPageContent() {
-  const { commercialFlow, agingDistribution, isLoading: isChartsLoading } = useDashboardCharts();
+  const { data: graphsTimeline, isLoading: isChartsLoading, isError: isChartsError } = useDashboardGraphs(365, 'monthly');
   const { highRisk, isLoading: isQueuesLoading } = useDashboardQueues();
 
   const isLoading = isChartsLoading || isQueuesLoading;
@@ -24,14 +24,8 @@ function PaymentAnalyticsPageContent() {
     );
   }
 
-  // Collections trend points
-  const paymentPoints = (Array.isArray(commercialFlow?.data) ? commercialFlow.data : []).map(p => ({
-    date: p.period_start,
-    value: p.collection_volume || 0
-  }));
-
   // Aging distribution indicators
-  const agingData = agingDistribution?.data || {
+  const agingData = {
     current: 0,
     overdue_30: 0,
     overdue_60: 0,
@@ -106,7 +100,7 @@ function PaymentAnalyticsPageContent() {
     }
   ];
 
-  const totalClearedVal = paymentPoints.reduce((acc, curr) => acc + curr.value, 0);
+  const totalClearedVal = (graphsTimeline || []).reduce((acc, curr) => acc + (curr.portfolio_payment || 0), 0);
 
   return (
     <div className="space-y-8 font-sans">
@@ -125,13 +119,13 @@ function PaymentAnalyticsPageContent() {
         
         {/* Settlements Volume Trend */}
         <div className="lg:col-span-2 bg-surface rounded-xl border border-outline-variant p-6 hover:shadow-md transition-shadow">
-          <h3 className="font-headline text-xl font-bold text-primary border-b border-outline-variant/20 pb-3 mb-4 font-sans">Settlements Pulse</h3>
-          <Chart
-            data={paymentPoints}
-            type="payment"
-            title="Weekly Invoice Settlements Clearances"
-            isLoading={false}
-            height={220}
+          <h3 className="font-headline text-xl font-bold text-primary border-b border-outline-variant/20 pb-3 mb-4 font-sans">Portfolio Behavior Timeline</h3>
+          <UnifiedBehaviorGraph
+            timeline={graphsTimeline || []}
+            isPortfolio={true}
+            isLoading={isChartsLoading}
+            isError={isChartsError}
+            height={260}
           />
         </div>
 

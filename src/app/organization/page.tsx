@@ -145,16 +145,9 @@ export default function OrganizationSettingsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="font-bold text-outline uppercase block">Default Analysis Window</label>
-                    <select
-                      value={commercialConfig.windowDays}
-                      onChange={(e) => updateCommercialConfig({ windowDays: parseInt(e.target.value) })}
-                      className="w-full bg-background border border-outline-variant rounded p-3 text-sm focus:outline-none"
-                    >
-                      <option value="90">90 Days (Quarterly Pulse)</option>
-                      <option value="180">180 Days (Half-Year)</option>
-                      <option value="365">365 Days (Longitudinal Year)</option>
-                      <option value="730">730 Days (Dual-Year)</option>
-                    </select>
+                    <div className="w-full bg-slate-100 border border-outline-variant rounded p-3 text-sm text-slate-500 font-semibold select-none">
+                      365 Days (Longitudinal Year - Locked)
+                    </div>
                   </div>
                   <div className="space-y-1.5">
                     <label className="font-bold text-outline uppercase block">System Currency</label>

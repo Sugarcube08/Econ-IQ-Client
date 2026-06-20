@@ -10,15 +10,15 @@ import Table, { TableColumn } from '@/components/ui/Table';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
-import { 
-  Sparkles, 
-  Clock, 
-  Check, 
-  X, 
-  Sliders, 
-  ShieldAlert, 
-  Activity, 
-  AlertCircle 
+import {
+  Sparkles,
+  Clock,
+  Check,
+  X,
+  Sliders,
+  ShieldAlert,
+  Activity,
+  AlertCircle
 } from 'lucide-react';
 
 function OperationsDecisionsPageContent() {
@@ -152,7 +152,7 @@ function OperationsDecisionsPageContent() {
       width: 120,
       render: (row) => (
         <span className="font-mono text-xs text-slate-600">
-          {formatPercent(row.confidence)}
+          {formatPercent(row.confidence * 100)}
         </span>
       )
     },
@@ -256,7 +256,7 @@ function OperationsDecisionsPageContent() {
 
   return (
     <div className="space-y-8 font-sans">
-      
+
       {/* Header */}
       <div>
         <h2 className="font-headline text-3xl font-extrabold text-slate-900 tracking-tight">Decisions Command Center</h2>
@@ -307,7 +307,7 @@ function OperationsDecisionsPageContent() {
               <h3 className="font-headline text-lg font-bold text-slate-800">Execute Credit Decision</h3>
               <button onClick={() => { setShowOverrideModal(false); setSelectedRec(null); }} className="text-slate-400 hover:text-slate-600 text-lg font-bold border-0 bg-transparent cursor-pointer">×</button>
             </div>
-            
+
             <form onSubmit={handleOverrideSubmit} className="space-y-4 text-xs">
               <div className="space-y-1">
                 <label className="font-bold text-slate-500 uppercase tracking-wider block">Decision Action</label>
@@ -317,11 +317,10 @@ function OperationsDecisionsPageContent() {
                       key={act}
                       type="button"
                       onClick={() => setDecisionAction(act)}
-                      className={`h-10 rounded-lg border font-semibold cursor-pointer uppercase transition-colors ${
-                        decisionAction === act
+                      className={`h-10 rounded-lg border font-semibold cursor-pointer uppercase transition-colors ${decisionAction === act
                           ? 'bg-brand-accent border-brand-accent text-white font-extrabold'
                           : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                      }`}
+                        }`}
                     >
                       {act}
                     </button>

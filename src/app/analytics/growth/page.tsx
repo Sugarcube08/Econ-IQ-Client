@@ -2,15 +2,15 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useDashboardCharts, useTopContributors } from '@/hooks/useDashboard';
+import { useDashboardGraphs, useTopContributors } from '@/hooks/useDashboard';
 import { formatCurrency, formatPercent } from '@/lib/utils';
 import Table, { TableColumn } from '@/components/ui/Table';
-import Chart from '@/components/ui/Chart';
+import UnifiedBehaviorGraph from '@/components/ui/UnifiedBehaviorGraph';
 import { TrendingUp, ArrowRight, Sparkles } from 'lucide-react';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 
 function GrowthAnalyticsPageContent() {
-  const { commercialFlow, isLoading: isChartsLoading } = useDashboardCharts();
+  const { data: graphsTimeline, isLoading: isChartsLoading, isError: isChartsError } = useDashboardGraphs(365, 'monthly');
   const { data: topContributors, isLoading: isContributorsLoading } = useTopContributors();
 
   const isLoading = isChartsLoading || isContributorsLoading;
@@ -23,12 +23,6 @@ function GrowthAnalyticsPageContent() {
       </div>
     );
   }
-
-  // Sales trend points
-  const salesPoints = (Array.isArray(commercialFlow?.data) ? commercialFlow.data : []).map(p => ({
-    date: p.period_start,
-    value: p.sales_volume || 0
-  }));
 
   // Top contributors list
   const contributors = (Array.isArray(topContributors) ? topContributors : []).map(item => ({
@@ -105,7 +99,7 @@ function GrowthAnalyticsPageContent() {
     }
   ];
 
-  const totalSalesSum = salesPoints.reduce((acc, curr) => acc + curr.value, 0);
+  const totalSalesSum = (graphsTimeline || []).reduce((acc, curr) => acc + (curr.portfolio_purchase || 0), 0);
 
   return (
     <div className="space-y-8 font-sans">
@@ -124,13 +118,13 @@ function GrowthAnalyticsPageContent() {
         
         {/* Sales Volume Trend */}
         <div className="lg:col-span-2 bg-surface rounded-xl border border-outline-variant p-6 hover:shadow-md transition-shadow">
-          <h3 className="font-headline text-xl font-bold text-primary border-b border-outline-variant/20 pb-3 mb-4 font-sans">Invoice Sales Trend</h3>
-          <Chart
-            data={salesPoints}
-            type="purchase"
-            title="Weekly Invoice Sales Volume"
-            isLoading={false}
-            height={220}
+          <h3 className="font-headline text-xl font-bold text-primary border-b border-outline-variant/20 pb-3 mb-4 font-sans">Portfolio Behavior Timeline</h3>
+          <UnifiedBehaviorGraph
+            timeline={graphsTimeline || []}
+            isPortfolio={true}
+            isLoading={isChartsLoading}
+            isError={isChartsError}
+            height={260}
           />
         </div>
 

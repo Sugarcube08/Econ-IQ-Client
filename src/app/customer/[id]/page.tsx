@@ -4,13 +4,14 @@ import React, { use, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCustomerProfile } from '@/hooks/queries/useCustomerProfile';
-import { useCustomerPredictions } from '@/hooks/queries/useCustomerPredictions';
 import { useCustomerRecommendations } from '@/hooks/queries/useCustomerRecommendations';
 import { useCustomerGraphs } from '@/hooks/queries/useCustomerGraphs';
 import { useAlerts } from '@/hooks/queries/useAlerts';
 import { useCollectionsActivities } from '@/hooks/queries/useCollectionsActivities';
 import { usePaymentCommitments } from '@/hooks/queries/usePaymentCommitments';
 import { useDecisionHistory } from '@/hooks/queries/useDecisionHistory';
+
+import { useCustomerShapExplanation } from '@/hooks/queries/useCustomerShapExplanation';
 
 import { useAcknowledgeAlert } from '@/hooks/mutations/useAcknowledgeAlert';
 import { useLogCollectionActivity } from '@/hooks/mutations/useLogCollectionActivity';
@@ -31,7 +32,7 @@ import RiskIndicator from '@/components/ui/RiskIndicator';
 import TrendIndicator from '@/components/ui/TrendIndicator';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
-import Chart from '@/components/ui/Chart';
+import UnifiedBehaviorGraph from '@/components/ui/UnifiedBehaviorGraph';
 import ErrorState from '@/components/ui/ErrorState';
 import LoadingState from '@/components/ui/LoadingState';
 
@@ -81,11 +82,15 @@ function CustomerDetailPageContent({ params }: PageProps) {
   const [commitAmount, setCommitAmount] = useState('');
   const [commitDate, setCommitDate] = useState('');
 
+  // ML Cockpit Workspace state
+
   // Queries
   const { data: profile, isLoading: isProfileLoading, isError: isProfileError, refetch: refetchProfile } = useCustomerProfile(id);
-  const { data: predictions, isLoading: isPredictionsLoading } = useCustomerPredictions(id);
   const { data: recommendations, isLoading: isRecsLoading } = useCustomerRecommendations(id);
   const graphs = useCustomerGraphs(id);
+
+  // ML Advisor Queries
+  const { data: shapExplanation, isLoading: isShapLoading } = useCustomerShapExplanation(id, 'distress');
 
   // Operations Queries
   const { data: activeAlerts, isLoading: isAlertsLoading } = useAlerts({ customer_id: id, status: 'ACTIVE' });
@@ -101,7 +106,6 @@ function CustomerDetailPageContent({ params }: PageProps) {
 
   if (
     isProfileLoading ||
-    isPredictionsLoading ||
     isRecsLoading ||
     graphs.isLoading ||
     isAlertsLoading ||
@@ -132,20 +136,7 @@ function CustomerDetailPageContent({ params }: PageProps) {
   const creditUtilization = Math.round(scores.credit_score * 100);
   const trendVal = deltas.health_score || 0.05;
 
-  const mapGraphPoints = (points: GraphPoint[] = [], type: 'purchase' | 'payment' | 'rg' | 'outstanding') => {
-    return (Array.isArray(points) ? points : []).map((p) => {
-      let value = 0;
-      if (type === 'purchase') value = p.purchase_amount ?? p.amount ?? 0;
-      else if (type === 'payment') value = p.payment_amount ?? p.amount ?? 0;
-      else if (type === 'rg') value = p.rg_amount ?? p.amount ?? 0;
-      else if (type === 'outstanding') value = p.outstanding ?? p.closing_outstanding ?? p.amount ?? 0;
 
-      return {
-        date: p.period_start || p.date || '',
-        value: Math.abs(value),
-      };
-    });
-  };
 
   const handleAcknowledgeAlert = async (alertId: string) => {
     try {
@@ -204,6 +195,37 @@ function CustomerDetailPageContent({ params }: PageProps) {
       console.error('Failed to submit decision:', err);
     }
   };
+
+  const ACTION_DISPLAY_MAP: Record<string, { title: string; desc: string; type: string }> = {
+    offer_extension: { title: 'Extend Payment Terms', desc: 'Provide 30-day invoice extension to ease liquidity distress.', type: 'terms' },
+    increase_credit_limit: { title: 'Increase Credit Limit', desc: 'Expand credit threshold limit by 20% to capture growth opportunity.', type: 'limit' },
+    decrease_credit_limit: { title: 'Tighten Credit Limit', desc: 'Restructure exposure down by 15% to mitigate default risk.', type: 'limit' },
+    promise_to_pay: { title: 'Secure Payment Commitment', desc: 'Log formal commitment to settle outstanding balances.', type: 'terms' },
+    collection_campaign: { title: 'Targeted Collections Campaign', desc: 'Enroll account in accelerated automated dunning workflow.', type: 'campaign' },
+    visit_customer: { title: 'Field Agent Site Visit', desc: 'Dispatch regional manager for in-person account reconciliation.', type: 'campaign' },
+    temporary_block: { title: 'Temporary Purchasing Block', desc: 'Freeze order dispatch until past-due invoices are resolved.', type: 'safety' },
+    escalation: { title: 'Formal Legal Escalation', desc: 'Initiate third-party recovery procedure for chronic delinquency.', type: 'safety' }
+  };
+
+  const FACTOR_DISPLAY_MAP: Record<string, { label: string; desc: string }> = {
+    trust_direction: { label: 'Repayment Trust Trajectory', desc: 'Pattern of broken vs kept payment commitments.' },
+    current_state: { label: 'Baseline Customer Financial State', desc: 'Overall credit health and risk rating classification.' },
+    payment_delay_avg: { label: 'Average Payment Latency', desc: 'Historical mean delay days past invoice due dates.' },
+    outstanding_ratio: { label: 'Outstanding Balance Ratio', desc: 'Ratio of open balance relative to maximum credit limit.' },
+    credit_utilization: { label: 'Credit Limit Utilization', desc: 'Current exposure drawdown percentage.' },
+    purchase_gap: { label: 'Sales Recency Gap', desc: 'Days elapsed since the last invoice purchase transaction.' },
+    collection_efficiency: { label: 'Collections Contact Engagement', desc: 'Ratio of successful outreach to total attempts.' },
+    payment_delay_trend: { label: 'Payment Latency Trend', desc: 'Acceleration or deceleration of delay days.' }
+  };
+
+  // Explainability factors categorization
+  const factorsIncreasingRisk = shapExplanation ? shapExplanation.top_factors.filter(f =>
+    ['payment_delay_avg', 'outstanding_ratio', 'credit_utilization', 'purchase_gap', 'payment_delay_trend'].includes(f)
+  ) : [];
+
+  const factorsReducingRisk = shapExplanation ? shapExplanation.top_factors.filter(f =>
+    ['trust_direction', 'collection_efficiency', 'current_state'].includes(f)
+  ) : [];
 
   // Build a timeline combining backend ledger events, dunning actions, and payment promises
   const timelineEvents = [
@@ -281,8 +303,8 @@ function CustomerDetailPageContent({ params }: PageProps) {
         </div>
       </PageToolbar>
 
-      {/* --- Bloomberg-Grade Operational Workspace Layout --- */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-start">
+      {/* --- Unified Credit Dossier Layout --- */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-start mt-6">
         
         {/* LEFT COLUMN: Customer Overview & Scores */}
         <div className="xl:col-span-2 space-y-8">
@@ -299,6 +321,77 @@ function CustomerDetailPageContent({ params }: PageProps) {
               <ScoreCard label="Credit Policy Safety" score={scores.credit_score} delta={deltas.credit_score} description="Compliance threshold" />
               <ScoreCard label="Collection Urgency" score={scores.collection_score} delta={deltas.collection_score} description="Action timeline queue" />
               <ScoreCard label="Trade Relationship" score={scores.relationship_score} delta={deltas.relationship_score} description="Loyalty longevity score" />
+            </div>
+          </div>
+
+          {/* Explainability Summary */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 shadow-sm">
+            <div>
+              <h3 className="font-headline text-lg font-bold text-slate-800 tracking-tight flex items-center gap-2">
+                <Layers className="w-5 h-5 text-indigo-600" /> Explainability Summary
+              </h3>
+              <p className="text-[10px] text-slate-400 font-semibold mt-1">
+                Primary behavioral drivers contributing to the customer's risk profile.
+              </p>
+            </div>
+
+            <div className="border border-slate-100 rounded-xl p-4 bg-slate-50/50">
+              {isShapLoading ? (
+                <div className="flex justify-center items-center py-6 gap-2">
+                  <div className="w-4 h-4 border-2 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                  <span className="text-[10px] text-slate-500 font-bold">Computing explainability factors...</span>
+                </div>
+              ) : shapExplanation ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Factors Increasing Risk */}
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-bold text-red-600 uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
+                      Factors Increasing Risk
+                    </h4>
+                    {factorsIncreasingRisk.length > 0 ? (
+                      <div className="space-y-2">
+                        {factorsIncreasingRisk.map((factor) => {
+                          const displayInfo = FACTOR_DISPLAY_MAP[factor] || { label: factor, desc: 'Model input parameter.' };
+                          return (
+                            <div key={factor} className="p-3 bg-white rounded-lg border border-red-100/50 space-y-1 shadow-sm">
+                              <span className="font-bold text-slate-800 text-xs">{displayInfo.label}</span>
+                              <p className="text-[10px] text-slate-500 leading-normal">{displayInfo.desc}</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">No significant risk-increasing factors identified.</p>
+                    )}
+                  </div>
+
+                  {/* Factors Reducing Risk */}
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-bold text-teal-600 uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-teal-600"></span>
+                      Factors Reducing Risk
+                    </h4>
+                    {factorsReducingRisk.length > 0 ? (
+                      <div className="space-y-2">
+                        {factorsReducingRisk.map((factor) => {
+                          const displayInfo = FACTOR_DISPLAY_MAP[factor] || { label: factor, desc: 'Model input parameter.' };
+                          return (
+                            <div key={factor} className="p-3 bg-white rounded-lg border border-teal-100/50 space-y-1 shadow-sm">
+                              <span className="font-bold text-slate-800 text-xs">{displayInfo.label}</span>
+                              <p className="text-[10px] text-slate-500 leading-normal">{displayInfo.desc}</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">No significant risk-reducing factors identified.</p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-4 text-xs text-slate-400">Failed to load explainability factors.</div>
+              )}
             </div>
           </div>
 
@@ -436,28 +529,18 @@ function CustomerDetailPageContent({ params }: PageProps) {
             )}
           </div>
 
-          {/* Interactive SVG Charts */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-2 shadow-sm">
-              <h4 className="font-headline text-sm font-bold text-slate-800">Billing History (Sales)</h4>
-              <Chart
-                data={mapGraphPoints(graphs.purchase.data || [], 'purchase')}
-                type="purchase"
-                title=""
-                isLoading={graphs.purchase.isLoading}
-                height={160}
-              />
-            </div>
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-2 shadow-sm">
-              <h4 className="font-headline text-sm font-bold text-slate-800">Payment Settlements History</h4>
-              <Chart
-                data={mapGraphPoints(graphs.payment.data || [], 'payment')}
-                type="payment"
-                title=""
-                isLoading={graphs.payment.isLoading}
-                height={160}
-              />
-            </div>
+          {/* Unified Customer Behavior Graph */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 shadow-sm">
+            <h4 className="font-headline text-sm font-bold text-slate-800 flex items-center gap-1.5 border-b border-slate-100 pb-2">
+              <Activity className="w-4 h-4 text-brand-accent" /> Customer Behavior Telemetry Matrix
+            </h4>
+            <UnifiedBehaviorGraph
+              timeline={graphs.data || []}
+              isPortfolio={false}
+              isLoading={graphs.isLoading}
+              isError={graphs.isError}
+              height={320}
+            />
           </div>
 
         </div>

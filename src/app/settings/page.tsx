@@ -134,17 +134,11 @@ function SettingsPageContent() {
                     className="w-full bg-slate-50 border border-slate-200 px-3 py-2 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-teal-600 focus:bg-white"
                   />
                 </div>
-                <div className="space-y-1.5">
+                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Default Score Timeline</label>
-                  <select
-                    value={defaultWindow}
-                    onChange={(e) => setDefaultWindow(e.target.value)}
-                    className="w-full bg-white border border-slate-200 px-3 py-2 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-teal-600"
-                  >
-                    <option value="90">90 Days</option>
-                    <option value="180">180 Days</option>
-                    <option value="365">365 Days (Recommended)</option>
-                  </select>
+                  <div className="w-full bg-slate-100 border border-slate-200 px-3 py-2 rounded-lg text-xs text-slate-500 font-semibold select-none">
+                    365 Days (Locked)
+                  </div>
                 </div>
               </div>
               <div className="pt-2 border-t border-slate-100 flex justify-end">

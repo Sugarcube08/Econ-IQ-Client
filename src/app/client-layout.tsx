@@ -40,7 +40,8 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     '/settings',
     '/reports',
     '/organization',
-    '/organization/users/invite'
+    '/organization/users/invite',
+    '/boardroom'
   ].includes(pathname) || 
     pathname.startsWith('/customer/') ||
     pathname.startsWith('/customers/') ||
