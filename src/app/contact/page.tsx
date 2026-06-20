@@ -19,8 +19,9 @@ const contactSchema = z.object({
 type ContactFormValues = z.infer<typeof contactSchema>;
 
 function generateMockTicket() {
-  const randomTicket = 'ECQ-' + Math.floor(100000 + Math.random() * 900000);
-  const mockHash = Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+  const timestamp = Date.now();
+  const randomTicket = 'ECQ-' + ((timestamp % 900000) + 100000);
+  const mockHash = timestamp.toString(16).padEnd(32, 'a');
   return { ticketId: randomTicket, checksum: mockHash };
 }
 
@@ -64,10 +65,8 @@ export default function ContactPage() {
 
   const onSubmit = async () => {
     setIsPending(true);
-    // Simulate API request and ledger submission
-    await new Promise((resolve) => setTimeout(resolve, 1200));
     
-    // Generate mock enterprise ticket signature details
+    // Generate deterministic ticket signature details
     const { ticketId: randomTicket, checksum: mockHash } = generateMockTicket();
     
     setTicketId(randomTicket);

@@ -2,7 +2,9 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useDashboardCharts, useDashboardQueues } from '@/hooks/useDashboard';
+import { useDashboardCharts } from '@/hooks/useDashboard';
+import { usePortfolioAnalytics } from '@/hooks/queries/usePortfolioAnalytics';
+import { useRiskSignals } from '@/hooks/queries/useRiskSignals';
 import { formatCurrency, formatPercent } from '@/lib/utils';
 import Table, { TableColumn } from '@/components/ui/Table';
 import Badge from '@/components/ui/Badge';
@@ -11,9 +13,15 @@ import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 
 function RiskAnalyticsPageContent() {
   const { stateDistribution, isLoading: isChartsLoading } = useDashboardCharts();
-  const { highRisk, isLoading: isQueuesLoading } = useDashboardQueues();
+  const { data: analyticsData, isLoading: isAnalyticsLoading } = usePortfolioAnalytics();
+  const { data: riskSignalsData, isLoading: isQueuesLoading } = useRiskSignals({
+    page: 1,
+    limit: 10,
+    sort_by: 'outstanding_current',
+    sort_order: 'desc'
+  });
 
-  const isLoading = isChartsLoading || isQueuesLoading;
+  const isLoading = isChartsLoading || isAnalyticsLoading || isQueuesLoading;
 
   if (isLoading) {
     return (
@@ -26,12 +34,11 @@ function RiskAnalyticsPageContent() {
 
   const stateData = stateDistribution?.data || {};
 
-  // Risk distribution points
-  const riskList = (Array.isArray(highRisk?.data) ? highRisk.data : []).map(item => ({
+  // Risk distribution points from backend
+  const riskList = (riskSignalsData?.items || []).map(item => ({
     customer_id: item.customer_id,
     customer_name: item.customer_name || 'Wholesale Client',
-    city: item.city || 'Regional Scope',
-    risk_score: item.risk_score !== undefined ? item.risk_score : 0.75,
+    safety_score: item.safety_score,
     outstanding: item.outstanding_current || 0,
     state: item.state || 'MONITOR'
   }));
@@ -47,26 +54,28 @@ function RiskAnalyticsPageContent() {
           <Link href={`/customer/${row.customer_id}`} className="font-semibold text-brand-accent hover:underline text-sm block">
             {row.customer_name}
           </Link>
-          <span className="text-[10px] text-outline font-mono block">ID: {row.customer_id.slice(0, 8)}</span>
         </div>
       )
     },
     {
-      key: 'city',
-      header: 'Location',
-      width: 140,
-      render: (row) => <span className="text-outline text-xs">{row.city}</span>
-    },
-    {
-      key: 'risk_score',
-      header: 'Risk Score Index',
+      key: 'safety_score',
+      header: 'Safety Score',
       sortable: true,
       width: 150,
-      render: (row) => (
-        <span className="font-mono font-bold text-error text-sm">
-          {(row.risk_score * 100).toFixed(0)}%
-        </span>
-      )
+      render: (row) => {
+        const score = row.safety_score;
+        let scoreColor = 'text-brand-accent';
+        if (score <= 0.4) {
+          scoreColor = 'text-error';
+        } else if (score < 0.7) {
+          scoreColor = 'text-brand-gold';
+        }
+        return (
+          <span className={`font-mono font-bold text-sm ${scoreColor}`}>
+            {(score * 100).toFixed(0)}%
+          </span>
+        );
+      }
     },
     {
       key: 'outstanding',
@@ -85,11 +94,18 @@ function RiskAnalyticsPageContent() {
       header: 'Segment',
       width: 150,
       render: (row) => {
-        const stateLower = row.state?.toLowerCase() || '';
-        const variant = stateLower === 'active' || stateLower === 'healthy' ? 'accent' : stateLower === 'monitor' ? 'warning' : 'danger';
+        const stateStr = (row.state || 'MONITOR').toUpperCase();
+        let variant: 'primary' | 'secondary' | 'accent' | 'success' | 'warning' | 'danger' | 'info' = 'info';
+        if (stateStr === 'LIQUIDITY_STRESS' || stateStr === 'STRESSED') {
+          variant = 'danger';
+        } else if (stateStr === 'MONITOR' || stateStr === 'CONTRACT') {
+          variant = 'warning';
+        } else if (stateStr === 'HEALTHY') {
+          variant = 'success';
+        }
         return (
           <Badge variant={variant} size="sm">
-            {row.state.replace('_', ' ')}
+            {stateStr.replace('_', ' ')}
           </Badge>
         );
       }
@@ -109,6 +125,20 @@ function RiskAnalyticsPageContent() {
       )
     }
   ];
+
+  const avgRisk = analyticsData?.risk_analytics?.average_risk_score || 0.35;
+  const avgSafety = analyticsData?.risk_analytics?.average_safety_score || 0.65;
+  const highRiskExposure = analyticsData?.risk_analytics?.high_risk_exposure_pct || 0.0;
+  
+  let riskLevel = 'LOW';
+  let badgeVariant: 'primary' | 'secondary' | 'accent' | 'success' | 'warning' | 'danger' | 'info' = 'success';
+  if (avgRisk > 0.6) {
+    riskLevel = 'HIGH';
+    badgeVariant = 'danger';
+  } else if (avgRisk > 0.3) {
+    riskLevel = 'MEDIUM';
+    badgeVariant = 'warning';
+  }
 
   return (
     <div className="space-y-8 font-sans">
@@ -169,16 +199,16 @@ function RiskAnalyticsPageContent() {
               <span className="font-bold text-brand-gold">{(stateData.monitor?.percentage || 0).toFixed(0)}% of accounts</span>
             </div>
             <div className="flex justify-between border-b border-outline-variant/10 pb-2">
-              <span className="text-outline uppercase">Stressed Share:</span>
-              <span className="font-bold text-error">{(stateData.liquidity_stress?.percentage || 0).toFixed(0)}% of accounts</span>
+              <span className="text-outline uppercase">High Risk Exposure:</span>
+              <span className="font-bold text-error">{highRiskExposure.toFixed(1)}% of exposure</span>
             </div>
             <div className="flex justify-between border-b border-outline-variant/10 pb-2">
               <span className="text-outline uppercase">Aggregate Risk Level:</span>
-              <span className="font-bold text-error">HIGH</span>
+              <span className={`font-bold uppercase ${avgRisk > 0.6 ? 'text-error' : avgRisk > 0.3 ? 'text-brand-gold' : 'text-brand-accent'}`}>{riskLevel}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-outline uppercase">Risk Severity SLA:</span>
-              <Badge variant="warning" size="sm">TIGHTEN_CREDIT_POLICY</Badge>
+              <Badge variant={badgeVariant} size="sm">{avgRisk > 0.3 ? 'TIGHTEN_CREDIT_POLICY' : 'MAINTAIN_CURRENT_POLICY'}</Badge>
             </div>
           </div>
         </div>
@@ -193,7 +223,7 @@ function RiskAnalyticsPageContent() {
             columns={columns}
             data={riskList}
             isLoading={false}
-            sortBy="risk_score"
+            sortBy="outstanding"
             sortOrder="desc"
             density="standard"
           />
@@ -210,4 +240,3 @@ export default function RiskAnalyticsPage() {
     </RouteErrorBoundary>
   );
 }
-

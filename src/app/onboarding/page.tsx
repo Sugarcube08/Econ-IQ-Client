@@ -30,8 +30,7 @@ export default function OnboardingWizardPage() {
   const [isSyncingLedger, setIsSyncingLedger] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
+    setMounted(true);
   }, []);
 
   if (!mounted) {
@@ -88,16 +87,12 @@ export default function OnboardingWizardPage() {
   // Simulating connection actions for data readiness
   const handleConnectErp = async () => {
     setIsConnectingErp(true);
-    updateDataReadiness({ erp: 'pending', sync: 'pending' });
-    await new Promise((resolve) => setTimeout(resolve, 1500));
     updateDataReadiness({ erp: 'connected', sync: 'connected' });
     setIsConnectingErp(false);
   };
 
   const handleUploadLedger = async () => {
     setIsSyncingLedger(true);
-    updateDataReadiness({ ledger: 'pending', customer: 'pending' });
-    await new Promise((resolve) => setTimeout(resolve, 1500));
     updateDataReadiness({ ledger: 'connected', customer: 'connected' });
     setIsSyncingLedger(false);
   };

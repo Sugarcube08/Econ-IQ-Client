@@ -1,6 +1,7 @@
 export interface CustomerScores {
   health_score: number;
   risk_score: number;
+  safety_score: number;
   growth_score: number;
   trust_score: number;
   opportunity_score: number;
@@ -30,6 +31,7 @@ export interface Customer {
   city: string | null;
   health_score: number;
   risk_score: number;
+  safety_score: number;
   growth_score: number;
   trust_score: number;
   opportunity_score: number;

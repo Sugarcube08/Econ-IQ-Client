@@ -54,7 +54,6 @@ function OpportunitiesPageContent() {
           <Link href={`/customer/${row.customer_id}`} className="font-semibold text-brand-accent hover:underline text-sm block">
             {row.customer_name}
           </Link>
-          <span className="text-[10px] text-outline font-mono block">ID: {row.customer_id.slice(0, 8)}</span>
         </div>
       )
     },

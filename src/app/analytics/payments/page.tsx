@@ -2,8 +2,10 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useDashboardGraphs, useDashboardQueues } from '@/hooks/useDashboard';
-import { formatCurrency, formatPercent } from '@/lib/utils';
+import { useDashboardGraphs } from '@/hooks/useDashboard';
+import { usePortfolioAnalytics } from '@/hooks/queries/usePortfolioAnalytics';
+import { useRiskSignals } from '@/hooks/queries/useRiskSignals';
+import { formatCurrency } from '@/lib/utils';
 import Table, { TableColumn } from '@/components/ui/Table';
 import UnifiedBehaviorGraph from '@/components/ui/UnifiedBehaviorGraph';
 import { DollarSign, ArrowRight } from 'lucide-react';
@@ -11,9 +13,15 @@ import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 
 function PaymentAnalyticsPageContent() {
   const { data: graphsTimeline, isLoading: isChartsLoading, isError: isChartsError } = useDashboardGraphs(365, 'monthly');
-  const { highRisk, isLoading: isQueuesLoading } = useDashboardQueues();
+  const { data: analyticsData, isLoading: isAnalyticsLoading } = usePortfolioAnalytics();
+  const { data: riskSignalsData, isLoading: isQueuesLoading } = useRiskSignals({
+    page: 1,
+    limit: 10,
+    sort_by: 'outstanding_current',
+    sort_order: 'desc'
+  });
 
-  const isLoading = isChartsLoading || isQueuesLoading;
+  const isLoading = isChartsLoading || isAnalyticsLoading || isQueuesLoading;
 
   if (isLoading) {
     return (
@@ -24,25 +32,29 @@ function PaymentAnalyticsPageContent() {
     );
   }
 
-  // Aging distribution indicators
-  const agingData = {
+  // Aging distribution indicators from backend (Phase 5)
+  const agingDist = analyticsData?.aging_distribution || {
     current: 0,
-    overdue_30: 0,
-    overdue_60: 0,
-    overdue_90: 0,
-    overdue_120: 0,
-    overdue_120_plus: 0,
+    '1_30_days': 0,
+    '31_60_days': 0,
+    '61_90_days': 0,
+    '90_plus_days': 0
   };
 
-  const totalOutstandingSum = Object.values(agingData).reduce((a, b) => a + b, 0);
+  const totalOutstandingSum = (
+    (agingDist.current || 0) +
+    (agingDist['1_30_days'] || 0) +
+    (agingDist['31_60_days'] || 0) +
+    (agingDist['61_90_days'] || 0) +
+    (agingDist['90_plus_days'] || 0)
+  );
 
-  // High risk collection accounts
-  const collectorsList = (Array.isArray(highRisk?.data) ? highRisk.data : []).map(item => ({
+  // High risk collection accounts from backend
+  const collectorsList = (riskSignalsData?.items || []).map(item => ({
     customer_id: item.customer_id,
     customer_name: item.customer_name || 'Wholesale Client',
-    city: item.city || 'Regional Scope',
     outstanding: item.outstanding_current || 0,
-    payment_delay: item.repayment_health_delta !== undefined ? Math.abs(item.repayment_health_delta * 40).toFixed(0) : '18'
+    payment_delay: item.payment_delay !== undefined ? item.payment_delay : 0
   }));
 
   const columns: TableColumn<typeof collectorsList[0]>[] = [
@@ -56,7 +68,6 @@ function PaymentAnalyticsPageContent() {
           <Link href={`/customer/${row.customer_id}`} className="font-semibold text-brand-accent hover:underline text-sm block">
             {row.customer_name}
           </Link>
-          <span className="text-[10px] text-outline font-mono block">ID: {row.customer_id.slice(0, 8)}</span>
         </div>
       )
     },
@@ -80,7 +91,7 @@ function PaymentAnalyticsPageContent() {
       width: 160,
       render: (row) => (
         <span className="font-mono font-bold text-error text-sm">
-          {row.payment_delay} Days
+          {row.payment_delay.toFixed(1)} Days
         </span>
       )
     },
@@ -101,6 +112,9 @@ function PaymentAnalyticsPageContent() {
   ];
 
   const totalClearedVal = (graphsTimeline || []).reduce((acc, curr) => acc + (curr.portfolio_payment || 0), 0);
+  const avgDso = analyticsData?.payment_analytics?.dso || 30.0;
+  const avgDelay = analyticsData?.payment_analytics?.average_payment_delay_days || 0.0;
+  const repaymentIndex = avgDelay <= 5.0 ? 'HEALTHY' : avgDelay <= 15.0 ? 'MONITOR_LAG' : 'CRITICAL_DELAY';
 
   return (
     <div className="space-y-8 font-sans">
@@ -146,11 +160,11 @@ function PaymentAnalyticsPageContent() {
             </div>
             <div className="flex justify-between border-b border-outline-variant/10 pb-2">
               <span className="text-outline uppercase">Average DSO Metric:</span>
-              <span className="font-bold text-primary">34.2 Days (Target: 30)</span>
+              <span className="font-bold text-primary">{avgDso.toFixed(1)} Days</span>
             </div>
             <div className="flex justify-between font-sans">
               <span className="text-outline uppercase font-semibold">Repayment Index:</span>
-              <span className="font-bold text-[#c8a96b]">MONITOR_LAG</span>
+              <span className="font-bold text-[#c8a96b]">{repaymentIndex}</span>
             </div>
           </div>
         </div>
@@ -182,4 +196,3 @@ export default function PaymentAnalyticsPage() {
     </RouteErrorBoundary>
   );
 }
-

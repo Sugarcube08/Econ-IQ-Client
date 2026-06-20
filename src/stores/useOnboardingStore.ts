@@ -237,7 +237,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => {
     },
 
     addOrganization: (name) => {
-      const id = 'org_' + Math.floor(100000 + Math.random() * 900000);
+      const id = 'org_' + ((Date.now() % 900000) + 100000);
       const updatedOrgs = [...get().organizations, { id, name }];
       set({ organizations: updatedOrgs, activeOrgId: id });
       persist({ organizations: updatedOrgs, activeOrgId: id });

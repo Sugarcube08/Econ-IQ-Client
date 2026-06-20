@@ -77,7 +77,16 @@ function UsersPageContent() {
       setEmail('');
       setFullName('');
       fetchUsers();
-      setTimeout(() => setAddMsg(null), 4000);
+      const start = Date.now();
+      let frameId: number;
+      const checkClear = () => {
+        if (Date.now() - start >= 4000) {
+          setAddMsg(null);
+        } else {
+          frameId = requestAnimationFrame(checkClear);
+        }
+      };
+      frameId = requestAnimationFrame(checkClear);
     } catch (err: unknown) {
       let errMsg = 'Failed to create user account.';
       if (err && typeof err === 'object' && 'response' in err) {

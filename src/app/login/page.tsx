@@ -34,23 +34,30 @@ export default function LoginPage() {
   // Focus first OTP input when moving to OTP step
   useEffect(() => {
     if (step === 'otp') {
-      const timer = setTimeout(() => {
+      const frameId = requestAnimationFrame(() => {
         otpInputsRef.current[0]?.focus();
-      }, 100);
-      return () => clearTimeout(timer);
+      });
+      return () => cancelAnimationFrame(frameId);
     }
   }, [step]);
 
-  // Handle countdown timer seconds
+  // Handle countdown timer seconds via requestAnimationFrame
   useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
+    let frameId: number;
+    let lastUpdate = Date.now();
+    const run = () => {
+      const now = Date.now();
+      if (now - lastUpdate >= 1000) {
+        setTimerSeconds((prev) => Math.max(0, prev - 1));
+        lastUpdate = now;
+      }
+      frameId = requestAnimationFrame(run);
+    };
     if (step === 'otp' && timerSeconds > 0) {
-      interval = setInterval(() => {
-        setTimerSeconds((prev) => prev - 1);
-      }, 1000);
+      frameId = requestAnimationFrame(run);
     }
     return () => {
-      if (interval) clearInterval(interval);
+      if (frameId) cancelAnimationFrame(frameId);
     };
   }, [step, timerSeconds]);
 
@@ -163,7 +170,16 @@ export default function LoginPage() {
       await requestOtp.mutateAsync(emailInput);
       setTimerSeconds(120); // Reset timer
       setResendStatus('A new access code has been dispatched.');
-      setTimeout(() => setResendStatus(null), 3000);
+      const start = Date.now();
+      let resendFrame: number;
+      const checkClear = () => {
+        if (Date.now() - start >= 3000) {
+          setResendStatus(null);
+        } else {
+          resendFrame = requestAnimationFrame(checkClear);
+        }
+      };
+      resendFrame = requestAnimationFrame(checkClear);
     } catch (e: unknown) {
       let errMsg = 'Failed to resend access token.';
       if (e && typeof e === 'object' && 'response' in e) {

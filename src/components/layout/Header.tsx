@@ -38,7 +38,6 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
 
   const handleManualSync = async () => {
     setIsSyncing(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
     updateChecklistItem('firstSync', true);
     setIsSyncing(false);
     setQuickActionsOpen(false);

@@ -58,7 +58,6 @@ export default function AlertCard({
             <span className="font-headline font-bold text-sm text-primary block">
               {customerName}
             </span>
-            <span className="text-[10px] text-outline font-mono block">ID: {customerId.slice(0, 8)}</span>
           </div>
         </div>
         <div className="flex items-center gap-2">

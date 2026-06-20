@@ -69,12 +69,13 @@ export default function ReportsPage() {
       setExportMessage('Report generated and downloaded successfully.');
 
       // Add to history
+      const nowMs = Date.now();
       const newItem: ExportHistoryItem = {
-        id: `exp-${Math.floor(Math.random() * 90000) + 10000}`,
+        id: `exp-${(nowMs % 90000) + 10000}`,
         segment: segment ? segment.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'All Segment States',
         search: search || 'N/A',
         timestamp: new Date().toISOString().replace('T', ' ').substring(0, 16),
-        checksum: Math.random().toString(16).substring(2, 14) + '...',
+        checksum: nowMs.toString(16).substring(0, 12) + '...',
         size: `${(blob.size / 1024).toFixed(1)} KB`
       };
 

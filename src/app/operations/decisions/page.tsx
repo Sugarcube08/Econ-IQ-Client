@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useRecommendations } from '@/hooks/queries/useRecommendations';
 import { useDecisionHistory } from '@/hooks/queries/useDecisionHistory';
@@ -16,9 +16,7 @@ import {
   Check,
   X,
   Sliders,
-  ShieldAlert,
-  Activity,
-  AlertCircle
+  Search
 } from 'lucide-react';
 
 function OperationsDecisionsPageContent() {
@@ -27,12 +25,30 @@ function OperationsDecisionsPageContent() {
   const [decisionAction, setDecisionAction] = useState<'APPROVED' | 'REJECTED' | 'OVERRIDDEN'>('APPROVED');
   const [showOverrideModal, setShowOverrideModal] = useState(false);
 
+  // Pagination, sorting, search states
+  const [page, setPage] = useState(1);
+  const [limit] = useState(25);
+  const [sortBy, setSortBy] = useState('created_at');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  useEffect(() => {
+    setDebouncedSearch(search);
+    setPage(1);
+  }, [search]);
+
   // Queries
-  const { data: recommendationsData, isLoading: isRecsLoading } = useRecommendations({
+  const { data: recommendationsData, isLoading: isRecsLoading, refetch: refetchRecs } = useRecommendations({
+    page,
+    limit,
     status: 'ACTIVE',
+    sort_by: sortBy,
+    sort_order: sortOrder,
+    search: debouncedSearch || undefined,
   });
 
-  const { data: historyData, isLoading: isHistoryLoading } = useDecisionHistory();
+  const { data: historyData, isLoading: isHistoryLoading, refetch: refetchHistory } = useDecisionHistory();
 
   // Mutations
   const recordDecisionMutation = useRecordDecision();
@@ -45,6 +61,8 @@ function OperationsDecisionsPageContent() {
         action_taken: 'APPROVED',
         reason: 'Approved via global decisions manager',
       });
+      refetchRecs();
+      refetchHistory();
     } catch (err) {
       console.error('Failed to approve recommendation:', err);
     }
@@ -58,6 +76,8 @@ function OperationsDecisionsPageContent() {
         action_taken: 'REJECTED',
         reason: 'Rejected via global decisions manager',
       });
+      refetchRecs();
+      refetchHistory();
     } catch (err) {
       console.error('Failed to reject recommendation:', err);
     }
@@ -82,6 +102,8 @@ function OperationsDecisionsPageContent() {
       });
       setShowOverrideModal(false);
       setSelectedRec(null);
+      refetchRecs();
+      refetchHistory();
     } catch (err) {
       console.error('Failed to submit decision override:', err);
     }
@@ -89,20 +111,35 @@ function OperationsDecisionsPageContent() {
 
   // Recommendations mapping
   const recommendationsList = useMemo(() => {
-    return Array.isArray(recommendationsData) ? recommendationsData : [];
+    if (!recommendationsData) return [];
+    if (Array.isArray(recommendationsData)) return recommendationsData;
+    if ('items' in recommendationsData) return recommendationsData.items;
+    return [];
   }, [recommendationsData]);
+
+  const totalPages = (recommendationsData && 'total_pages' in recommendationsData) ? (recommendationsData.total_pages as number) : 1;
+
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('desc');
+    }
+    setPage(1);
+  };
 
   const recColumns: TableColumn<any>[] = [
     {
-      key: 'customer_id',
-      header: 'Customer Account',
+      key: 'customer_name',
+      header: 'Customer Name',
       sortable: true,
       pinned: true,
-      width: 150,
+      width: 180,
       render: (row) => (
         <div>
           <Link href={`/customer/${row.customer_id}`} className="font-bold text-brand-accent hover:underline text-xs block">
-            {row.customer_id}
+            {row.customer_name || row.customer_id}
           </Link>
         </div>
       )
@@ -194,7 +231,7 @@ function OperationsDecisionsPageContent() {
     }
   ];
 
-  // History mapping
+  // History mapping (client-rendered list)
   const historyList = useMemo(() => {
     return Array.isArray(historyData) ? historyData : [];
   }, [historyData]);
@@ -265,6 +302,33 @@ function OperationsDecisionsPageContent() {
         </p>
       </div>
 
+      {/* Search Toolbar */}
+      <div className="flex gap-2 max-w-md bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+        <div className="relative flex-grow">
+          <input
+            type="text"
+            placeholder="Search recommendations..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-brand-accent bg-white text-slate-800"
+          />
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+        </div>
+        {search && (
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              setSearch('');
+              setPage(1);
+            }}
+          >
+            Clear
+          </Button>
+        )}
+      </div>
+
       {/* Recommendations Queue */}
       <div className="space-y-3">
         <h3 className="font-headline text-lg font-bold text-slate-800 tracking-tight flex items-center gap-2">
@@ -275,8 +339,14 @@ function OperationsDecisionsPageContent() {
             columns={recColumns}
             data={recommendationsList}
             isLoading={isRecsLoading}
-            sortBy="severity"
-            sortOrder="desc"
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSort={handleSort}
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            hasPrevious={page > 1}
+            hasNext={page < totalPages}
             density="compact"
           />
         </div>
@@ -299,7 +369,7 @@ function OperationsDecisionsPageContent() {
         </div>
       </div>
 
-      {/* --- OVERRIDE JUSTIFICATION DIALOG MODAL --- */}
+      {/* --- OVERRIDE/APPROVAL DIALOG MODAL --- */}
       {showOverrideModal && selectedRec && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full p-6 space-y-4">

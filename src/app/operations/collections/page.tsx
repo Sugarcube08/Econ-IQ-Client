@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useCustomers } from '@/hooks/queries/useCustomers';
 import { usePaymentCommitments } from '@/hooks/queries/usePaymentCommitments';
@@ -22,7 +22,8 @@ import {
   TrendingDown, 
   PlusCircle, 
   Clock, 
-  ArrowRight 
+  ArrowRight,
+  Search
 } from 'lucide-react';
 
 function OperationsCollectionsPageContent() {
@@ -37,13 +38,30 @@ function OperationsCollectionsPageContent() {
   const [commitAmount, setCommitAmount] = useState('');
   const [commitDate, setCommitDate] = useState('');
 
+  // Pagination, sorting, search states for Customers datatable (Overdue Queue)
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [sortBy, setSortBy] = useState('collection_score');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  useEffect(() => {
+    setDebouncedSearch(search);
+    setPage(1);
+  }, [search]);
+
   // Queries
-  const { data: customersData, isLoading: isCustomersLoading } = useCustomers({
+  const { data: customersData, isLoading: isCustomersLoading, refetch: refetchCustomers } = useCustomers({
     current_state: 'liquidity_stress,monitor',
-    limit: 100,
+    page,
+    limit,
+    sort_by: sortBy,
+    sort_order: sortOrder,
+    search: debouncedSearch || undefined,
   });
 
-  const { data: commitmentsData, isLoading: isCommitmentsLoading } = usePaymentCommitments({
+  const { data: commitmentsData, isLoading: isCommitmentsLoading, refetch: refetchCommitments } = usePaymentCommitments({
     status: 'PENDING',
   });
 
@@ -78,6 +96,7 @@ function OperationsCollectionsPageContent() {
       });
       setShowLogModal(false);
       setSelectedCustomerId(null);
+      refetchCustomers();
     } catch (err) {
       console.error('Failed to log activity:', err);
     }
@@ -95,6 +114,7 @@ function OperationsCollectionsPageContent() {
       });
       setShowPromiseModal(false);
       setSelectedCustomerId(null);
+      refetchCommitments();
     } catch (err) {
       console.error('Failed to register payment promise:', err);
     }
@@ -109,14 +129,32 @@ function OperationsCollectionsPageContent() {
       city: c.city || 'Regional Scope',
       collection_score: c.collection_score * 100,
       outstanding: c.outstanding_current,
-      aging_bucket: c.outstanding_current > 100000 ? '90+ Days' : '30-60 Days',
       state: c.state,
     }));
   }, [customersData]);
 
+  const pagination = customersData?.metadata?.pagination || {
+    page: 1,
+    limit: 10,
+    total_records: 0,
+    total_pages: 0,
+    has_next: false,
+    has_previous: false,
+  };
+
   const totalOverdueVal = useMemo(() => {
     return overdueQueueList.reduce((acc, curr) => acc + curr.outstanding, 0);
   }, [overdueQueueList]);
+
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('desc');
+    }
+    setPage(1);
+  };
 
   const overdueColumns: TableColumn<any>[] = [
     {
@@ -130,7 +168,6 @@ function OperationsCollectionsPageContent() {
           <Link href={`/customer/${row.customer_id}`} className="font-semibold text-brand-accent hover:underline text-sm block">
             {row.customer_name}
           </Link>
-          <span className="text-[10px] text-slate-400 font-mono block">ID: {row.customer_id}</span>
         </div>
       )
     },
@@ -156,19 +193,6 @@ function OperationsCollectionsPageContent() {
           {formatCurrency(row.outstanding)}
         </span>
       )
-    },
-    {
-      key: 'aging_bucket',
-      header: 'Aging Category',
-      width: 150,
-      render: (row) => {
-        const is90 = row.aging_bucket.startsWith('90');
-        return (
-          <Badge variant={is90 ? 'danger' : 'warning'} size="sm">
-            {row.aging_bucket}
-          </Badge>
-        );
-      }
     },
     {
       key: 'workflow_actions',
@@ -227,13 +251,13 @@ function OperationsCollectionsPageContent() {
 
   const commitmentColumns: TableColumn<any>[] = [
     {
-      key: 'customer_id',
-      header: 'Customer ID',
+      key: 'customer_name',
+      header: 'Customer Name',
       sortable: true,
-      width: 150,
+      width: 185,
       render: (row) => (
         <Link href={`/customer/${row.customer_id}`} className="font-bold text-brand-accent hover:underline text-xs block">
-          {row.customer_id}
+          {row.customer_name || row.customer_id}
         </Link>
       )
     },
@@ -298,117 +322,150 @@ function OperationsCollectionsPageContent() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white border border-slate-200 p-6 rounded-xl flex items-center justify-between shadow-sm">
+        <div className="bg-surface border border-outline-variant p-6 rounded-xl flex items-center justify-between shadow-sm">
           <div className="space-y-1">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Overdue Accounts</span>
-            <span className="font-headline text-3xl font-extrabold text-red-600">{overdueQueueList.length}</span>
+            <span className="text-[10px] font-bold text-outline uppercase tracking-wider block">Stressed Accounts</span>
+            <span className="font-headline text-3xl font-extrabold text-slate-900">{pagination.total_records}</span>
           </div>
-          <div className="p-3 bg-red-50 text-red-600 rounded-lg border border-red-100">
+          <div className="p-3 bg-red-100 text-red-600 rounded-lg border border-red-200">
             <Users className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 p-6 rounded-xl flex items-center justify-between shadow-sm">
+        <div className="bg-surface border border-outline-variant p-6 rounded-xl flex items-center justify-between shadow-sm">
           <div className="space-y-1">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Overdue Receivables</span>
+            <span className="text-[10px] font-bold text-outline uppercase tracking-wider block">Total Stressed Receivables</span>
             <span className="font-headline text-3xl font-extrabold text-slate-900">{formatCurrency(totalOverdueVal)}</span>
           </div>
-          <div className="p-3 bg-slate-50 text-slate-700 rounded-lg border border-slate-100">
+          <div className="p-3 bg-amber-100 text-amber-600 rounded-lg border border-amber-200">
             <DollarSign className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 p-6 rounded-xl flex items-center justify-between shadow-sm">
+        <div className="bg-surface border border-outline-variant p-6 rounded-xl flex items-center justify-between shadow-sm">
           <div className="space-y-1">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Commitment Rate (SLA)</span>
-            <span className="font-headline text-2xl font-extrabold text-teal-600">96.8% Clear</span>
+            <span className="text-[10px] font-bold text-outline uppercase tracking-wider block">Active Promises Kept Rate</span>
+            <span className="font-headline text-3xl font-extrabold text-[#c8a96b]">88%</span>
           </div>
-          <div className="p-3 bg-teal-50 text-teal-600 rounded-lg border border-teal-100">
-            <Activity className="w-6 h-6" />
+          <div className="p-3 bg-teal-100 text-teal-600 rounded-lg border border-teal-200">
+            <TrendingDown className="w-6 h-6" />
           </div>
         </div>
+      </div>
+
+      {/* Search Toolbar */}
+      <div className="flex gap-2 max-w-md bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+        <div className="relative flex-grow">
+          <input
+            type="text"
+            placeholder="Search stressed accounts..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-brand-accent bg-white text-slate-800"
+          />
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+        </div>
+        {search && (
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              setSearch('');
+              setPage(1);
+            }}
+          >
+            Clear
+          </Button>
+        )}
       </div>
 
       {/* Overdue Queue */}
       <div className="space-y-3">
         <h3 className="font-headline text-lg font-bold text-slate-800 tracking-tight flex items-center gap-2">
-          <TrendingDown className="w-5 h-5 text-red-500" /> Overdue Outreach Queue
+          <Activity className="w-5 h-5 text-red-600" /> Overdue Receivables Queue
         </h3>
         <div className="bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm">
           <Table
             columns={overdueColumns}
             data={overdueQueueList}
             isLoading={isCustomersLoading}
-            sortBy="collection_score"
-            sortOrder="desc"
-            density="compact"
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSort={handleSort}
+            page={page}
+            totalPages={pagination.total_pages}
+            onPageChange={setPage}
+            hasPrevious={pagination.has_previous}
+            hasNext={pagination.has_next}
+            density="standard"
           />
         </div>
       </div>
 
-      {/* Payment Commitments */}
+      {/* Promises List */}
       <div className="space-y-3 pt-4">
         <h3 className="font-headline text-lg font-bold text-slate-800 tracking-tight flex items-center gap-2">
-          <Clock className="w-5 h-5 text-teal-600" /> Payment Commitments Monitoring
+          <Clock className="w-5 h-5 text-slate-500" /> Active Payment Promises
         </h3>
         <div className="bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm">
           <Table
             columns={commitmentColumns}
             data={commitmentsList}
             isLoading={isCommitmentsLoading}
-            sortBy="promised_date"
-            sortOrder="asc"
             density="compact"
           />
         </div>
       </div>
 
-      {/* --- LOG OUTREACH ACTIVITY MODAL --- */}
+      {/* --- OUTREACH LOGGER DIALOG MODAL --- */}
       {showLogModal && selectedCustomerId && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full p-6 space-y-4">
             <div className="flex justify-between items-start border-b border-slate-100 pb-2">
-              <h3 className="font-headline text-lg font-bold text-slate-800">Log Outreach Activity</h3>
+              <h3 className="font-headline text-lg font-bold text-slate-800">Log Outreach Communication</h3>
               <button onClick={() => { setShowLogModal(false); setSelectedCustomerId(null); }} className="text-slate-400 hover:text-slate-600 text-lg font-bold border-0 bg-transparent cursor-pointer">×</button>
             </div>
-            
-            <form onSubmit={handleLogSubmit} className="space-y-4 text-xs">
-              <div className="space-y-1">
-                <label className="font-bold text-slate-500 uppercase tracking-wider block">Activity Type</label>
-                <select
-                  value={actType}
-                  onChange={(e) => setActType(e.target.value)}
-                  className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 font-semibold focus:outline-none focus:border-brand-accent text-slate-800"
-                >
-                  <option value="CALL">Phone Call</option>
-                  <option value="EMAIL">Email Note</option>
-                  <option value="LETTER">Formal demand letter</option>
-                  <option value="OTHER">Other action</option>
-                </select>
+
+            <form onSubmit={handleLogSubmit} className="space-y-4 text-xs font-semibold">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-500 uppercase tracking-wider block">Channel</label>
+                  <select
+                    value={actType}
+                    onChange={(e) => setActType(e.target.value)}
+                    className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 focus:outline-none focus:border-brand-accent text-slate-800"
+                  >
+                    <option value="CALL">Phone Call</option>
+                    <option value="EMAIL">Email Note</option>
+                    <option value="LETTER">Demand Letter</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-500 uppercase tracking-wider block">Outcome</label>
+                  <select
+                    value={actOutcome}
+                    onChange={(e) => setActOutcome(e.target.value)}
+                    className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 focus:outline-none focus:border-brand-accent text-slate-800"
+                  >
+                    <option value="CONTACTED">Contact Established</option>
+                    <option value="LEFT_VM">Left Voicemail</option>
+                    <option value="NO_ANSWER">No Answer</option>
+                    <option value="EMAIL_SENT">Email Transmitted</option>
+                  </select>
+                </div>
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-slate-500 uppercase tracking-wider block">Outreach Outcome</label>
-                <select
-                  value={actOutcome}
-                  onChange={(e) => setActOutcome(e.target.value)}
-                  className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 font-semibold focus:outline-none focus:border-brand-accent text-slate-800"
-                >
-                  <option value="CONTACTED">Client Contacted</option>
-                  <option value="LEFT_VM">Voice Mail Left</option>
-                  <option value="NO_ANSWER">No Answer</option>
-                  <option value="EMAIL_SENT">Billing Email Dispatched</option>
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <label className="font-bold text-slate-500 uppercase tracking-wider block">Notes</label>
+                <label className="font-bold text-slate-500 uppercase tracking-wider block">Communication Notes Summary</label>
                 <textarea
                   required
                   value={actNotes}
                   onChange={(e) => setActNotes(e.target.value)}
-                  placeholder="Provide communication summary..."
-                  className="w-full p-3 h-24 rounded-lg border border-slate-200 bg-slate-50 focus:outline-none focus:border-brand-accent text-slate-800 font-semibold resize-none"
+                  placeholder="Summarize discussion details, verbal promises, or dunning reasons..."
+                  className="w-full p-3 h-24 rounded-lg border border-slate-200 bg-slate-50 focus:outline-none focus:border-brand-accent text-slate-800 resize-none"
                 />
               </div>
 
@@ -425,36 +482,36 @@ function OperationsCollectionsPageContent() {
         </div>
       )}
 
-      {/* --- REGISTER PAYMENT PROMISE MODAL --- */}
+      {/* --- PROMISE REGISTRATION DIALOG MODAL --- */}
       {showPromiseModal && selectedCustomerId && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full p-6 space-y-4">
             <div className="flex justify-between items-start border-b border-slate-100 pb-2">
-              <h3 className="font-headline text-lg font-bold text-slate-800">Log Payment Commitment</h3>
+              <h3 className="font-headline text-lg font-bold text-slate-800">Secure Payment Commitment</h3>
               <button onClick={() => { setShowPromiseModal(false); setSelectedCustomerId(null); }} className="text-slate-400 hover:text-slate-600 text-lg font-bold border-0 bg-transparent cursor-pointer">×</button>
             </div>
-            
-            <form onSubmit={handlePromiseSubmit} className="space-y-4 text-xs">
+
+            <form onSubmit={handlePromiseSubmit} className="space-y-4 text-xs font-semibold">
               <div className="space-y-1">
-                <label className="font-bold text-slate-500 uppercase tracking-wider block">Promised Amount ($)</label>
+                <label className="font-bold text-slate-500 uppercase tracking-wider block">Promised Recovery Amount ($)</label>
                 <input
                   type="number"
                   required
-                  placeholder="Amount to settle"
+                  placeholder="Expected settlement amount"
                   value={commitAmount}
                   onChange={(e) => setCommitAmount(e.target.value)}
-                  className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 font-semibold focus:outline-none focus:border-brand-accent text-slate-800"
+                  className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 focus:outline-none focus:border-brand-accent text-slate-800"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-slate-500 uppercase tracking-wider block">Expected Date</label>
+                <label className="font-bold text-slate-500 uppercase tracking-wider block">Target Settlement Date</label>
                 <input
                   type="date"
                   required
                   value={commitDate}
                   onChange={(e) => setCommitDate(e.target.value)}
-                  className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 font-semibold focus:outline-none focus:border-brand-accent text-slate-800"
+                  className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 focus:outline-none focus:border-brand-accent text-slate-800"
                 />
               </div>
 

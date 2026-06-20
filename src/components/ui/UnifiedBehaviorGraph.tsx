@@ -12,6 +12,7 @@ export interface UnifiedTimelinePoint {
   outstanding?: number;
   health_score?: number;
   risk_score?: number;
+  safety_score?: number;
   trust_score?: number;
   growth_score?: number;
   collection_score?: number;
@@ -44,7 +45,7 @@ const METRIC_CONFIGS: Record<
   payment_volume: { label: 'Payment Volume', color: '#1e40af', type: 'currency' }, // Navy Blue
   outstanding: { label: 'Outstanding Balance', color: '#d97706', type: 'currency' }, // Amber
   health_score: { label: 'Health Score', color: '#16a34a', type: 'percent' }, // Green
-  risk_score: { label: 'Risk Score', color: '#dc2626', type: 'percent' }, // Red
+  safety_score: { label: 'Safety Score', color: '#dc2626', type: 'percent' }, // Red
   trust_score: { label: 'Trust Score', color: '#4f46e5', type: 'percent' }, // Indigo
   growth_score: { label: 'Growth Score', color: '#9333ea', type: 'percent' }, // Purple
   collection_score: { label: 'Collection Score', color: '#e11d48', type: 'percent' }, // Pink
@@ -83,7 +84,7 @@ export default function UnifiedBehaviorGraph({
         'payment_volume',
         'outstanding',
         'health_score',
-        'risk_score',
+        'safety_score',
         'trust_score',
         'growth_score',
         'collection_score',
@@ -168,7 +169,10 @@ export default function UnifiedBehaviorGraph({
   // Calculate max values for each active metric individually to normalize them beautifully
   const metricMaxes = activeMetrics.reduce<Record<string, number>>((acc, metric) => {
     const vals = visibleTimeline.map((p) => {
-      const v = p[metric as keyof UnifiedTimelinePoint];
+      let v = p[metric as keyof UnifiedTimelinePoint];
+      if (metric === 'safety_score' && v === undefined && p.risk_score !== undefined) {
+        v = 1.0 - p.risk_score;
+      }
       return typeof v === 'number' ? Math.abs(v) : 0;
     });
     const maxVal = Math.max(...vals, 1.0);
@@ -181,7 +185,10 @@ export default function UnifiedBehaviorGraph({
     const maxVal = metricMaxes[metric];
     const points = visibleTimeline.map((p, idx) => {
       const x = paddingLeft + (visibleCount > 1 ? (idx / (visibleCount - 1)) * chartWidth : chartWidth / 2);
-      const rawVal = p[metric as keyof UnifiedTimelinePoint];
+      let rawVal = p[metric as keyof UnifiedTimelinePoint];
+      if (metric === 'safety_score' && rawVal === undefined && p.risk_score !== undefined) {
+        rawVal = 1.0 - p.risk_score;
+      }
       const val = typeof rawVal === 'number' ? Math.abs(rawVal) : 0;
       const y = paddingTop + chartHeight - (val / maxVal) * chartHeight;
       return { x, y, val, date: p.timestamp };
@@ -278,7 +285,7 @@ export default function UnifiedBehaviorGraph({
           onMouseLeave={handleMouseLeave}
         >
           {/* Horizontal Gridlines */}
-          {[0, 0.25, 0.5, 0.75, 1.0].map((ratio) => {
+          {[0, 1/4, 2/4, 3/4, 4/4].map((ratio) => {
             const y = paddingTop + ratio * chartHeight;
             return (
               <line
@@ -403,7 +410,10 @@ export default function UnifiedBehaviorGraph({
             <div className="space-y-1.5">
               {activeMetrics.map((m) => {
                 const config = METRIC_CONFIGS[m];
-                const rawVal = hoveredDataPoint[m as keyof UnifiedTimelinePoint];
+                let rawVal = hoveredDataPoint[m as keyof UnifiedTimelinePoint];
+                if (m === 'safety_score' && rawVal === undefined && hoveredDataPoint.risk_score !== undefined) {
+                  rawVal = 1.0 - hoveredDataPoint.risk_score;
+                }
                 const val = typeof rawVal === 'number' ? rawVal : 0;
                 return (
                   <div key={m} className="flex justify-between items-center gap-6">

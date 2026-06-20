@@ -5,6 +5,7 @@ export interface AlertData {
   id: string;
   workspace_id: string | null;
   customer_id: string;
+  customer_name?: string;
   alert_type: string;
   alert_severity: string;
   title: string;
@@ -21,15 +22,26 @@ export interface AlertCounts {
   warning: number;
 }
 
+export interface PaginatedAlerts {
+  items: AlertData[];
+  page: number;
+  limit: number;
+  total: number;
+  total_pages: number;
+}
+
 export const AlertsService = {
   async getAlerts(params?: {
+    page?: number;
+    limit?: number;
     status?: string;
     severity?: string;
     customer_id?: string;
-    limit?: number;
-    offset?: number;
-  }): Promise<StandardResponse<AlertData[]>> {
-    const res = await apiClient.get<StandardResponse<AlertData[]>>('/alerts', { params });
+    sort_by?: string;
+    sort_order?: string;
+    search?: string;
+  }): Promise<StandardResponse<AlertData[] | PaginatedAlerts>> {
+    const res = await apiClient.get<StandardResponse<AlertData[] | PaginatedAlerts>>('/alerts', { params });
     return res.data;
   },
 

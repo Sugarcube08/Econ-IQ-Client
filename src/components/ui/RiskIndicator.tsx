@@ -11,14 +11,14 @@ interface RiskIndicatorProps {
 
 export default function RiskIndicator({ score, label, size = 'md' }: RiskIndicatorProps) {
   let variant: 'accent' | 'warning' | 'danger' = 'accent';
-  let text = label || 'Low Risk';
+  let text = label || 'Healthy';
 
-  if (score >= 0.7) {
+  if (score <= 0.4) {
     variant = 'danger';
-    text = label || 'Critical';
-  } else if (score >= 0.4) {
+    text = label || 'Danger';
+  } else if (score < 0.7) {
     variant = 'warning';
-    text = label || 'Medium';
+    text = label || 'Warning';
   }
 
   return (

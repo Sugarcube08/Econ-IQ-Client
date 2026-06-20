@@ -24,7 +24,16 @@ export default function OrganizationSettingsPage() {
 
   const handleSave = () => {
     setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2000);
+    const start = Date.now();
+    let frameId: number;
+    const checkClear = () => {
+      if (Date.now() - start >= 2000) {
+        setSaveSuccess(false);
+      } else {
+        frameId = requestAnimationFrame(checkClear);
+      }
+    };
+    frameId = requestAnimationFrame(checkClear);
   };
 
   const tabs: { id: SettingsTab; label: string; icon: string }[] = [

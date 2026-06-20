@@ -1,6 +1,6 @@
 'use client';
 
-import React, { use, useState } from 'react';
+import React, { use, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCustomerProfile } from '@/hooks/queries/useCustomerProfile';
@@ -10,6 +10,7 @@ import { useAlerts } from '@/hooks/queries/useAlerts';
 import { useCollectionsActivities } from '@/hooks/queries/useCollectionsActivities';
 import { usePaymentCommitments } from '@/hooks/queries/usePaymentCommitments';
 import { useDecisionHistory } from '@/hooks/queries/useDecisionHistory';
+import { useTimeline } from '@/hooks/queries/useTimeline';
 
 import { useCustomerShapExplanation } from '@/hooks/queries/useCustomerShapExplanation';
 
@@ -97,6 +98,35 @@ function CustomerDetailPageContent({ params }: PageProps) {
   const { data: dbActivities, isLoading: isActivitiesLoading } = useCollectionsActivities({ customer_id: id });
   const { data: dbCommitments, isLoading: isCommitmentsLoading } = usePaymentCommitments({ customer_id: id });
   const { data: dbHistory, isLoading: isHistoryLoading } = useDecisionHistory({ customer_id: id });
+  const { data: timelineData, isLoading: isTimelineLoading } = useTimeline(id, { limit: 50 });
+
+  // Build a timeline using backend activity timeline endpoint
+  const timelineEvents = useMemo(() => {
+    return (timelineData?.items || []).map((evt: any) => {
+      let variant: 'neutral' | 'success' | 'warning' | 'danger' = 'neutral';
+      const etype = evt.event_type;
+      if (etype === 'ALERT') {
+        const sev = evt.metadata?.severity || '';
+        variant = (sev === 'CRITICAL' || sev === 'HIGH' || sev === 'MAJOR') ? 'danger' : 'warning';
+      } else if (etype === 'PAYMENT') {
+        variant = 'success';
+      } else if (etype === 'RETURN') {
+        variant = 'warning';
+      } else if (etype === 'COMMITMENT') {
+        const status = evt.metadata?.status;
+        variant = (status === 'COMPLETED' || status === 'KEPT') ? 'success' : status === 'FAILED' ? 'danger' : 'warning';
+      } else if (etype === 'DECISION') {
+        const act = evt.metadata?.action_taken;
+        variant = act === 'REJECTED' ? 'danger' : act === 'APPROVED' ? 'success' : 'warning';
+      }
+      return {
+        date: evt.timestamp ? formatDate(evt.timestamp.split('T')[0]) : 'Unknown',
+        title: evt.title,
+        description: evt.description,
+        type: variant
+      };
+    });
+  }, [timelineData]);
 
   // Mutations
   const acknowledgeMutation = useAcknowledgeAlert();
@@ -111,7 +141,8 @@ function CustomerDetailPageContent({ params }: PageProps) {
     isAlertsLoading ||
     isActivitiesLoading ||
     isCommitmentsLoading ||
-    isHistoryLoading
+    isHistoryLoading ||
+    isTimelineLoading
   ) {
     return <LoadingState message="Reconstructing customer account intelligence dossier..." />;
   }
@@ -227,27 +258,6 @@ function CustomerDetailPageContent({ params }: PageProps) {
     ['trust_direction', 'collection_efficiency', 'current_state'].includes(f)
   ) : [];
 
-  // Build a timeline combining backend ledger events, dunning actions, and payment promises
-  const timelineEvents = [
-    ...(dbActivities || []).map((act: any) => ({
-      date: formatDate(act.created_at.split('T')[0]),
-      title: `${act.activity_type.toUpperCase()} Outreach Logged`,
-      description: `Outcome: ${act.outcome.replace('_', ' ')} | Notes: ${act.notes}`,
-      type: 'neutral' as const,
-    })),
-    ...(dbCommitments || []).map((comm: any) => ({
-      date: formatDate(comm.created_at.split('T')[0]),
-      title: 'Payment Promise Logged',
-      description: `Promised ${formatCurrency(comm.amount)} to settle on ${formatDate(comm.promised_date)} | Status: ${comm.status}`,
-      type: comm.status === 'PENDING' ? ('warning' as const) : comm.status === 'KEPT' ? ('success' as const) : ('danger' as const),
-    })),
-    {
-      date: formatDate(profile.last_purchased_at),
-      title: 'Last Purchased Activity',
-      description: `Last invoice generated for this customer account. Active balance currently at ${formatCurrency(totalOutstanding)}.`,
-      type: 'success' as const,
-    },
-  ];
 
   const headerActions = (
     <Button
@@ -305,16 +315,16 @@ function CustomerDetailPageContent({ params }: PageProps) {
 
       {/* --- Unified Credit Dossier Layout --- */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-start mt-6">
-        
+
         {/* LEFT COLUMN: Customer Overview & Scores */}
         <div className="xl:col-span-2 space-y-8">
-          
+
           {/* Scorecard grids: 8 Score Blocks */}
           <div className="space-y-3">
             <h3 className="font-headline text-lg font-bold text-slate-800 tracking-tight">Consolidated Credit Scorecard</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <ScoreCard label="Health Index" score={scores.health_score} delta={deltas.health_score} description="Aggregate ledger status" />
-              <ScoreCard label="Risk Index" score={scores.risk_score} delta={deltas.risk_score} description="Default probability risk" />
+              <ScoreCard label="Safety Score" score={scores.safety_score} delta={-deltas.risk_score} description="Repayment safety index" />
               <ScoreCard label="Purchase Volume" score={scores.growth_score} delta={deltas.growth_score} description="Frequency and value trends" />
               <ScoreCard label="Behavior Trust" score={scores.trust_score} delta={deltas.trust_score} description="Repayment trust factor" />
               <ScoreCard label="Expansion Opportunity" score={scores.opportunity_score} delta={deltas.opportunity_score} description="Limit upsell triggers" />
@@ -469,7 +479,7 @@ function CustomerDetailPageContent({ params }: PageProps) {
                           <div className="flex gap-4 text-[9px] text-slate-400 font-semibold">
                             <span>Adjust: {r.value}</span>
                             <span>•</span>
-                            <span>Confidence: {formatPercent(r.confidence)}</span>
+                            <span>Confidence: {formatPercent(r.confidence * 100)}</span>
                           </div>
                         </div>
                       </div>
@@ -547,7 +557,7 @@ function CustomerDetailPageContent({ params }: PageProps) {
 
         {/* RIGHT COLUMN: Action panels (Outreach Logger, Commitment Creator, Timeline) */}
         <div className="space-y-8">
-          
+
           {/* Collections Outreach Logger Form */}
           <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 shadow-sm">
             <h3 className="font-headline text-md font-bold text-slate-800 flex items-center gap-1.5 border-b border-slate-100 pb-2">
@@ -661,7 +671,7 @@ function CustomerDetailPageContent({ params }: PageProps) {
               <h3 className="font-headline text-lg font-bold text-slate-800">Execute Credit Decision</h3>
               <button onClick={() => setSelectedRec(null)} className="text-slate-400 hover:text-slate-600 text-lg font-bold cursor-pointer border-0 bg-transparent">×</button>
             </div>
-            
+
             <form onSubmit={handleDecisionSubmit} className="space-y-4 text-xs">
               <div className="space-y-1">
                 <label className="font-bold text-slate-500 uppercase tracking-wider block">Select Decision Action</label>
@@ -671,11 +681,10 @@ function CustomerDetailPageContent({ params }: PageProps) {
                       key={act}
                       type="button"
                       onClick={() => setDecisionAction(act)}
-                      className={`h-10 rounded-lg border font-semibold cursor-pointer uppercase transition-colors ${
-                        decisionAction === act
-                          ? 'bg-brand-accent border-brand-accent text-white font-extrabold'
-                          : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                      }`}
+                      className={`h-10 rounded-lg border font-semibold cursor-pointer uppercase transition-colors ${decisionAction === act
+                        ? 'bg-brand-accent border-brand-accent text-white font-extrabold'
+                        : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                        }`}
                     >
                       {act}
                     </button>

@@ -57,11 +57,9 @@ export default function InviteTeamPage() {
     if (!email.trim() || !fullName.trim()) return;
 
     setIsProvisioning(true);
-    // Simulate API request to provision user
-    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     const newUser: ProvisionedUser = {
-      id: 'usr_' + Math.floor(Math.random() * 10000),
+      id: 'usr_' + (Date.now() % 10000),
       fullName: fullName.trim(),
       email: email.trim(),
       role,

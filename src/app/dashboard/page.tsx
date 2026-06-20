@@ -228,12 +228,12 @@ function DashboardPageContent() {
   // Columns for tables
   const alertColumns: TableColumn<AlertData>[] = [
     {
-      key: 'customer_id',
-      header: 'Customer',
+      key: 'customer_name',
+      header: 'Customer Name',
       sortable: true,
       render: (row) => (
         <Link href={`/customer/${row.customer_id}`} className="font-semibold text-teal-700 hover:underline">
-          {row.customer_id.slice(0, 8)}...
+          {row.customer_name || 'Unnamed Account'}
         </Link>
       )
     },
@@ -286,7 +286,6 @@ function DashboardPageContent() {
           <Link href={`/customer/${row.customer_id}`} className="font-semibold text-teal-700 hover:underline block text-sm">
             {row.customer_name || 'Unnamed Account'}
           </Link>
-          <span className="text-[10px] text-slate-400 font-mono block">ID: {row.customer_id.slice(0, 8)}</span>
         </div>
       )
     },
@@ -335,11 +334,11 @@ function DashboardPageContent() {
 
   const decisionsColumns: TableColumn<DecisionAuditData>[] = [
     {
-      key: 'customer_id',
-      header: 'Customer',
+      key: 'customer_name',
+      header: 'Customer Name',
       render: (row) => (
         <Link href={`/customer/${row.customer_id}`} className="font-semibold text-teal-700 hover:underline">
-          {row.customer_id.slice(0, 8)}...
+          {row.customer_name || 'Unnamed Account'}
         </Link>
       )
     },
@@ -371,11 +370,11 @@ function DashboardPageContent() {
 
   const outreachColumns: TableColumn<CollectionActivityData>[] = [
     {
-      key: 'customer_id',
-      header: 'Customer',
+      key: 'customer_name',
+      header: 'Customer Name',
       render: (row) => (
         <Link href={`/customer/${row.customer_id}`} className="font-semibold text-teal-700 hover:underline">
-          {row.customer_id.slice(0, 8)}...
+          {row.customer_name || 'Unnamed Account'}
         </Link>
       )
     },

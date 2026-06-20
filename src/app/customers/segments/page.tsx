@@ -123,7 +123,6 @@ function SegmentsPageContent() {
           <Link href={`/customer/${row.customer_id}`} className="font-semibold text-teal-700 hover:underline block text-sm">
             {row.customer_name || 'Anonymous Customer'}
           </Link>
-          <span className="text-[10px] text-slate-400 font-mono mt-0.5 block">ID: {row.customer_id.slice(0, 8)}</span>
         </div>
       )
     },
@@ -134,10 +133,10 @@ function SegmentsPageContent() {
       render: (row) => <HealthIndicator score={row.health_score} size="sm" />
     },
     {
-      key: 'risk_score',
-      header: 'Risk Score',
+      key: 'safety_score',
+      header: 'Safety Score',
       width: 140,
-      render: (row) => <RiskIndicator score={row.risk_score} size="sm" />
+      render: (row) => <RiskIndicator score={row.safety_score} size="sm" />
     },
     {
       key: 'outstanding_current',
@@ -151,8 +150,8 @@ function SegmentsPageContent() {
       header: 'Recommended Policy Action',
       width: 220,
       render: (row) => {
-        const actionText = row.risk_score >= 0.6 ? 'TIGHTEN_PAYMENT_TERMS' : 'EXPAND_CREDIT_LIMIT';
-        const isTighten = row.risk_score >= 0.6;
+        const actionText = row.safety_score <= 0.4 ? 'TIGHTEN_PAYMENT_TERMS' : 'EXPAND_CREDIT_LIMIT';
+        const isTighten = row.safety_score <= 0.4;
         return (
           <Link
             href={`/customer/${row.customer_id}?tab=recommendations`}

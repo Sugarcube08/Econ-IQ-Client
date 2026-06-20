@@ -65,7 +65,16 @@ function SettingsPageContent() {
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     setSaveMsg('Preferences updated successfully.');
-    setTimeout(() => setSaveMsg(null), 3000);
+    const start = Date.now();
+    let frameId: number;
+    const checkClear = () => {
+      if (Date.now() - start >= 3000) {
+        setSaveMsg(null);
+      } else {
+        frameId = requestAnimationFrame(checkClear);
+      }
+    };
+    frameId = requestAnimationFrame(checkClear);
   };
 
   const menuItems = [
