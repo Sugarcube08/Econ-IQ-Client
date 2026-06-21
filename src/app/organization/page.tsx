@@ -166,7 +166,7 @@ export default function OrganizationSettingsPage() {
                       className="w-full bg-background border border-outline-variant rounded p-3 text-sm focus:outline-none"
                     >
                       <option value="INR">INR (₹)</option>
-                      <option value="USD">USD ($)</option>
+                      <option value="USD">USD (₹)</option>
                       <option value="EUR">EUR (€)</option>
                       <option value="GBP">GBP (£)</option>
                     </select>

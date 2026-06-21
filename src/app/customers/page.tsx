@@ -192,11 +192,11 @@ function AuthenticatedCustomers() {
           <div className="space-y-2 text-slate-500">
             <div className="leading-tight">
               <span className="font-mono text-[9px] text-slate-400 block">06/10/2026</span>
-              <p className="font-medium text-slate-700 mt-0.5">Invoice INV-2026-981 settled ($24,150.00)</p>
+              <p className="font-medium text-slate-700 mt-0.5">Invoice INV-2026-981 settled (₹24,150.00)</p>
             </div>
             <div className="leading-tight">
               <span className="font-mono text-[9px] text-slate-400 block">05/28/2026</span>
-              <p className="font-medium text-slate-700 mt-0.5">Order executed ORD-2026-441 ($48,250.00)</p>
+              <p className="font-medium text-slate-700 mt-0.5">Order executed ORD-2026-441 (₹48,250.00)</p>
             </div>
           </div>
         </div>
@@ -442,7 +442,7 @@ function PublicCustomers() {
       company: 'Metals Trading Alliance',
       initials: 'MT',
       industry: 'Commodities Trading & Logistics',
-      metric: '$4.2M',
+      metric: '₹4.2M',
       metricLabel: 'Released Working Capital',
       description: 'Within 90 days of deploying Econ-IQ, we identified and resolved hidden bottlenecks in our billing and dispute management workflows.',
       challenge: 'Disputes over freight charges lingered for months, stalling payments and bloating total outstanding balances.',

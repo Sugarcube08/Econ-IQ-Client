@@ -620,7 +620,7 @@ function CustomerDetailPageContent({ params }: PageProps) {
             </h3>
             <form onSubmit={handleLogCommitmentSubmit} className="space-y-3 text-xs">
               <div className="space-y-1">
-                <label className="font-bold text-slate-500 uppercase tracking-wider block">Promised Amount ($)</label>
+                <label className="font-bold text-slate-500 uppercase tracking-wider block">Promised Amount (₹)</label>
                 <input
                   type="number"
                   placeholder="Amount"

@@ -24,7 +24,7 @@ export default function OnboardingWizardPage() {
 
   const [mounted, setMounted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
+
   // Simulation states for Step 3 (Data Readiness)
   const [isConnectingErp, setIsConnectingErp] = useState(false);
   const [isSyncingLedger, setIsSyncingLedger] = useState(false);
@@ -110,7 +110,7 @@ export default function OnboardingWizardPage() {
           <span>Setup Progress</span>
           <span>Step {currentStep} of 5</span>
         </div>
-        
+
         {/* Progress Bar */}
         <div className="w-full h-1.5 bg-outline-variant rounded-full overflow-hidden">
           <div
@@ -124,19 +124,17 @@ export default function OnboardingWizardPage() {
           {stepsList.map((s) => (
             <div key={s.num} className="flex flex-col items-center gap-1 flex-1">
               <span
-                className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold font-mono border transition-all ${
-                  currentStep === s.num
+                className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold font-mono border transition-all ${currentStep === s.num
                     ? 'bg-brand-accent text-white border-brand-accent'
                     : currentStep > s.num
-                    ? 'bg-brand-accent/10 text-brand-accent border-brand-accent/30'
-                    : 'bg-background text-outline border-outline-variant'
-                }`}
+                      ? 'bg-brand-accent/10 text-brand-accent border-brand-accent/30'
+                      : 'bg-background text-outline border-outline-variant'
+                  }`}
               >
                 {s.num}
               </span>
-              <span className={`text-[9px] uppercase font-bold tracking-wider hidden sm:inline ${
-                currentStep === s.num ? 'text-brand-accent' : 'text-outline'
-              }`}>
+              <span className={`text-[9px] uppercase font-bold tracking-wider hidden sm:inline ${currentStep === s.num ? 'text-brand-accent' : 'text-outline'
+                }`}>
                 {s.label}
               </span>
             </div>
@@ -273,7 +271,7 @@ export default function OnboardingWizardPage() {
 
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 sm:col-span-2">
                 <label className="font-bold text-outline uppercase tracking-wider block">Default Analysis Window</label>
                 <div className="w-full bg-slate-100 border border-outline-variant rounded p-3 text-sm text-slate-500 font-semibold select-none">
                   365 Days (Longitudinal Year - Locked)
@@ -281,23 +279,6 @@ export default function OnboardingWizardPage() {
                 <p className="text-[10px] text-outline">Defines historical context length for payment score metrics.</p>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="font-bold text-outline uppercase tracking-wider block">Platform Currency</label>
-                <select
-                  value={commercialConfig.currency}
-                  onChange={(e) => updateCommercialConfig({ currency: e.target.value })}
-                  className="w-full bg-background border border-outline-variant rounded p-3 text-sm focus:outline-none focus:border-brand-accent text-secondary"
-                >
-                  <option value="INR">INR (₹) - Indian Rupee</option>
-                  <option value="USD">USD ($) - US Dollar</option>
-                  <option value="EUR">EUR (€) - Euro</option>
-                  <option value="GBP">GBP (£) - British Pound</option>
-                </select>
-                <p className="text-[10px] text-outline">Nominal values will be displayed in this currency designation.</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="font-bold text-outline uppercase tracking-wider block">Reporting Frequency</label>
                 <select
@@ -348,13 +329,12 @@ export default function OnboardingWizardPage() {
                   <p className="text-[10px] text-outline">SAP, NetSuite, or Dynamics secure database integration</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${
-                    dataReadiness.erp === 'connected'
+                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${dataReadiness.erp === 'connected'
                       ? 'bg-brand-accent/10 border-brand-accent/30 text-brand-accent'
                       : dataReadiness.erp === 'pending'
-                      ? 'bg-brand-gold/10 border-brand-gold/30 text-[#c8a96b] animate-pulse'
-                      : 'bg-outline-variant/20 border-outline-variant text-outline'
-                  }`}>
+                        ? 'bg-brand-gold/10 border-brand-gold/30 text-[#c8a96b] animate-pulse'
+                        : 'bg-outline-variant/20 border-outline-variant text-outline'
+                    }`}>
                     {dataReadiness.erp === 'connected' ? 'Connected' : dataReadiness.erp === 'pending' ? 'Pending' : 'Not Configured'}
                   </span>
                   {dataReadiness.erp === 'none' && (
@@ -378,13 +358,12 @@ export default function OnboardingWizardPage() {
                   </div>
                   <p className="text-[10px] text-outline">Hourly sync schedule for transaction records</p>
                 </div>
-                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${
-                  dataReadiness.sync === 'connected'
+                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${dataReadiness.sync === 'connected'
                     ? 'bg-brand-accent/10 border-brand-accent/30 text-brand-accent'
                     : dataReadiness.sync === 'pending'
-                    ? 'bg-brand-gold/10 border-brand-gold/30 text-[#c8a96b]'
-                    : 'bg-outline-variant/20 border-outline-variant text-outline'
-                }`}>
+                      ? 'bg-brand-gold/10 border-brand-gold/30 text-[#c8a96b]'
+                      : 'bg-outline-variant/20 border-outline-variant text-outline'
+                  }`}>
                   {dataReadiness.sync === 'connected' ? 'Connected' : dataReadiness.sync === 'pending' ? 'Pending' : 'Not Configured'}
                 </span>
               </div>
@@ -399,13 +378,12 @@ export default function OnboardingWizardPage() {
                   <p className="text-[10px] text-outline">Synchronize historical invoice registers (CSV/Excel)</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${
-                    dataReadiness.ledger === 'connected'
+                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${dataReadiness.ledger === 'connected'
                       ? 'bg-brand-accent/10 border-brand-accent/30 text-brand-accent'
                       : dataReadiness.ledger === 'pending'
-                      ? 'bg-brand-gold/10 border-brand-gold/30 text-[#c8a96b] animate-pulse'
-                      : 'bg-outline-variant/20 border-outline-variant text-outline'
-                  }`}>
+                        ? 'bg-brand-gold/10 border-brand-gold/30 text-[#c8a96b] animate-pulse'
+                        : 'bg-outline-variant/20 border-outline-variant text-outline'
+                    }`}>
                     {dataReadiness.ledger === 'connected' ? 'Loaded' : dataReadiness.ledger === 'pending' ? 'Uploading' : 'Not Configured'}
                   </span>
                   {dataReadiness.ledger === 'none' && (
@@ -429,13 +407,12 @@ export default function OnboardingWizardPage() {
                   </div>
                   <p className="text-[10px] text-outline">Customer account lists and address directory</p>
                 </div>
-                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${
-                  dataReadiness.customer === 'connected'
+                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${dataReadiness.customer === 'connected'
                     ? 'bg-brand-accent/10 border-brand-accent/30 text-brand-accent'
                     : dataReadiness.customer === 'pending'
-                    ? 'bg-brand-gold/10 border-brand-gold/30 text-[#c8a96b]'
-                    : 'bg-outline-variant/20 border-outline-variant text-outline'
-                }`}>
+                      ? 'bg-brand-gold/10 border-brand-gold/30 text-[#c8a96b]'
+                      : 'bg-outline-variant/20 border-outline-variant text-outline'
+                  }`}>
                   {dataReadiness.customer === 'connected' ? 'Loaded' : dataReadiness.customer === 'pending' ? 'Pending' : 'Not Configured'}
                 </span>
               </div>
@@ -472,7 +449,7 @@ export default function OnboardingWizardPage() {
 
             <div className="p-4 bg-background rounded border border-outline-variant space-y-4">
               <span className="font-bold text-secondary uppercase tracking-wider block">Pre-Provisioned Access Scopes</span>
-              
+
               <div className="space-y-3 font-sans text-xs">
                 <div className="flex items-start gap-3">
                   <input

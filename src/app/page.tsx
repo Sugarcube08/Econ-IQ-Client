@@ -227,11 +227,11 @@ export default function HomePage() {
                 </div>
                 <div className="bg-white p-4 rounded border border-outline-variant space-y-1">
                   <span className="text-[9px] text-outline uppercase tracking-wider font-semibold">Total Collections</span>
-                  <p className="font-headline text-xl font-bold text-secondary">$54.2M</p>
+                  <p className="font-headline text-xl font-bold text-secondary">₹54.2M</p>
                 </div>
                 <div className="bg-white p-4 rounded border border-outline-variant space-y-1">
                   <span className="text-[9px] text-outline uppercase tracking-wider font-semibold">Outstanding Exposure</span>
-                  <p className="font-headline text-xl font-bold text-secondary">$9.0M</p>
+                  <p className="font-headline text-xl font-bold text-secondary">₹9.0M</p>
                 </div>
               </div>
               {/* Bottom Pulse Representation */}
@@ -298,7 +298,7 @@ export default function HomePage() {
                   <select className="w-full text-xs bg-background border border-outline-variant rounded p-2 focus:outline-none">
                     <option>All Accounts (Active exposure)</option>
                     <option>Accounts in Liquidity Stress</option>
-                    <option>Accounts with Outstanding Balances &gt; $100k</option>
+                    <option>Accounts with Outstanding Balances &gt; ₹100k</option>
                   </select>
                 </div>
                 <div className="flex gap-4">

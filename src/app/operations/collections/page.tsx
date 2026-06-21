@@ -493,7 +493,7 @@ function OperationsCollectionsPageContent() {
 
             <form onSubmit={handlePromiseSubmit} className="space-y-4 text-xs font-semibold">
               <div className="space-y-1">
-                <label className="font-bold text-slate-500 uppercase tracking-wider block">Promised Recovery Amount ($)</label>
+                <label className="font-bold text-slate-500 uppercase tracking-wider block">Promised Recovery Amount (₹)</label>
                 <input
                   type="number"
                   required

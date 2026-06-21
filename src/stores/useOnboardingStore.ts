@@ -83,7 +83,7 @@ const defaultOrgProfile: OrgProfile = {
 
 const defaultCommercialConfig: CommercialConfig = {
   windowDays: 365,
-  currency: 'USD',
+  currency: 'INR',
   reportingPref: 'standard',
   calendar: 'gregorian',
 };

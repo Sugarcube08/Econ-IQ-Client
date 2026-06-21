@@ -8,7 +8,7 @@ export default function PricingPage() {
     {
       name: 'Starter Intelligence',
       tagline: 'For mid-market manufacturers and wholesalers seeking basic exposure tracking.',
-      price: '$1,200',
+      price: '₹7080',
       period: 'month',
       outcomes: [
         'Establish clean cash flow visibility across branches',
@@ -22,7 +22,7 @@ export default function PricingPage() {
     {
       name: 'Commercial Growth',
       tagline: 'For expanding B2B operations seeking active credit risk intelligence.',
-      price: '$2,800',
+      price: '₹23600',
       period: 'month',
       outcomes: [
         'Reduce counterparty credit delinquency by 25%',
@@ -37,7 +37,7 @@ export default function PricingPage() {
     {
       name: 'Corporate Enterprise',
       tagline: 'For large-scale industrial companies requiring comprehensive risk modeling.',
-      price: '$6,500',
+      price: '₹59000',
       period: 'month',
       outcomes: [
         'Achieve maximum cash flow velocity (14d+ DSO drop)',

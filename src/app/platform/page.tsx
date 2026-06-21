@@ -29,7 +29,7 @@ export default function PlatformPage() {
             </div>
             <div className="bg-background p-3 rounded border border-outline-variant/40">
               <span className="text-[10px] text-outline uppercase block">Total Outstanding</span>
-              <span className="text-lg font-black text-secondary">$12.4M</span>
+              <span className="text-lg font-black text-secondary">₹12.4M</span>
               <span className="text-[9px] text-[#ba1a1a] block mt-0.5 font-bold">12% in High-Risk Buckets</span>
             </div>
           </div>
