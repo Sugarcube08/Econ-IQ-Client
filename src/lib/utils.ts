@@ -36,6 +36,24 @@ export function formatDate(dateString: string | undefined | null): string {
   }
 }
 
+export function formatDateTime(dateString: string | undefined | null): string {
+  if (!dateString) return 'N/A';
+  try {
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return dateString;
+    return d.toLocaleString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  } catch {
+    return dateString;
+  }
+}
+
 export function safeArray<T>(val: any): T[] {
   return Array.isArray(val) ? val : [];
 }

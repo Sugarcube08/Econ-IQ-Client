@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCustomers } from '@/hooks/queries/useCustomers';
+import { useCustomerSummary } from '@/hooks/queries/useCustomerSummary';
 import { ReportService } from '@/services/report.service';
 import { formatCurrency, formatPercent, formatDate } from '@/lib/utils';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -31,8 +32,138 @@ import {
   UserCheck,
   TrendingDown,
   AlertTriangle,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Loader2
 } from 'lucide-react';
+
+function CustomerRowExpansionPanel({ customerId, safetyScore }: { customerId: string; safetyScore: number }) {
+  const { data: summary, isLoading, isError } = useCustomerSummary(customerId);
+  const isStressed = safetyScore <= 0.4;
+
+  if (isLoading) {
+    return (
+      <div className="w-full flex items-center justify-center py-6 text-slate-500 font-sans text-xs">
+        <Loader2 className="w-4 h-4 animate-spin text-teal-600 mr-2" />
+        Retrieving customer behavioral memory...
+      </div>
+    );
+  }
+
+  if (isError || !summary) {
+    return (
+      <div className="w-full text-center py-4 text-red-600 font-sans text-xs">
+        Failed to retrieve behavioral details.
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 font-sans text-xs pt-2 pb-4 px-2 border-t border-slate-100 bg-slate-50/20">
+      
+      {/* 1. Recent Activity */}
+      <div className="bg-white border border-slate-200 p-4 rounded-xl space-y-2.5 shadow-sm">
+        <span className="font-headline font-bold text-[10px] text-slate-400 uppercase tracking-widest block border-b border-slate-100 pb-1.5">
+          1. Recent Activity
+        </span>
+        <div className="space-y-2 text-slate-500 max-h-[140px] overflow-y-auto pr-1">
+          {summary.recent_activity.length > 0 ? (
+            summary.recent_activity.map((act) => (
+              <div key={act.id} className="leading-tight">
+                <span className="font-mono text-[9px] text-slate-400 block">
+                  {act.timestamp ? new Date(act.timestamp).toLocaleDateString() : ''}
+                </span>
+                <p className="font-medium text-slate-700 mt-0.5">{act.description}</p>
+              </div>
+            ))
+          ) : (
+            <p className="text-slate-400 italic">No recent activities.</p>
+          )}
+        </div>
+      </div>
+
+      {/* 2. Payment Trend */}
+      <div className="bg-white border border-slate-200 p-4 rounded-xl space-y-2.5 shadow-sm">
+        <span className="font-headline font-bold text-[10px] text-slate-400 uppercase tracking-widest block border-b border-slate-100 pb-1.5">
+          2. Payment Trend
+        </span>
+        <div className="space-y-2 text-slate-500">
+          <div>
+            <span className="text-slate-400 block font-medium">Avg settlement velocity:</span>
+            <strong className="text-slate-800 text-sm font-mono mt-0.5 block">{summary.payment_latency_days} Days</strong>
+          </div>
+          <div>
+            <span className="text-slate-400 block font-medium">Overdue delinquency:</span>
+            <span className={`font-semibold block mt-0.5 ${isStressed ? 'text-red-600' : 'text-emerald-600'}`}>
+              {isStressed ? 'Slightly slow clearance' : 'Prompt payment cycle'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Risk Drivers */}
+      <div className="bg-white border border-slate-200 p-4 rounded-xl space-y-2.5 shadow-sm">
+        <span className="font-headline font-bold text-[10px] text-slate-400 uppercase tracking-widest block border-b border-slate-100 pb-1.5">
+          3. Risk Drivers
+        </span>
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {summary.risk_drivers.length > 0 ? (
+            summary.risk_drivers.map((drv, idx) => (
+              <Badge key={idx} variant="danger" size="sm">{drv}</Badge>
+            ))
+          ) : (
+            <p className="text-slate-400 italic font-medium pt-1">No risk drivers.</p>
+          )}
+        </div>
+      </div>
+
+      {/* 4. Growth Signals */}
+      <div className="bg-white border border-slate-200 p-4 rounded-xl space-y-2.5 shadow-sm">
+        <span className="font-headline font-bold text-[10px] text-slate-400 uppercase tracking-widest block border-b border-slate-100 pb-1.5">
+          4. Growth Signals
+        </span>
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {summary.growth_signals.length > 0 ? (
+            summary.growth_signals.map((sig, idx) => (
+              <Badge key={idx} variant="accent" size="sm">{sig}</Badge>
+            ))
+          ) : (
+            <p className="text-slate-400 italic font-medium pt-1">No growth signals.</p>
+          )}
+        </div>
+      </div>
+
+      {/* 5. Recommendations */}
+      <div className="bg-white border border-slate-200 p-4 rounded-xl space-y-2.5 shadow-sm flex flex-col justify-between">
+        <div>
+          <span className="font-headline font-bold text-[10px] text-slate-400 uppercase tracking-widest block border-b border-slate-100 pb-1.5">
+            5. Recommendations
+          </span>
+          <div className="space-y-2 max-h-[120px] overflow-y-auto mt-2 pr-1">
+            {summary.recommendations.map((rec) => (
+              <div key={rec.id} className="border-b border-slate-50 pb-1.5 last:border-0 last:pb-0">
+                <span className={`text-[9px] font-bold uppercase tracking-wider block ${rec.severity === 'CRITICAL' ? 'text-red-600' : 'text-teal-600'}`}>
+                  {rec.recommendation_type.replace(/_/g, ' ')} ({Math.round(rec.confidence * 100)}%)
+                </span>
+                <p className="text-slate-600 font-medium leading-relaxed mt-0.5">
+                  {rec.reason}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="pt-2 flex gap-2" onClick={(e) => e.stopPropagation()}>
+          <Link 
+            href={`/customer/${customerId}`} 
+            className="w-full text-center px-2 py-1.5 bg-teal-700 hover:bg-teal-800 text-white font-bold text-[10px] rounded-lg transition-colors uppercase tracking-wider block"
+          >
+            Analyze Dossier
+          </Link>
+        </div>
+      </div>
+
+    </div>
+  );
+}
 
 function AuthenticatedCustomers() {
   const router = useRouter();
@@ -172,112 +303,8 @@ function AuthenticatedCustomers() {
     }
   ];
 
-  // Refactored Row Expansion with explicit sections:
-  // Recent Activity, Payment Trend, Risk Drivers, Growth Signals, Recommendations
   const renderRowExpansion = (row: any) => {
-    const isStressed = row.safety_score <= 0.4;
-    
-    // Derived values
-    const positiveDrivers = ['HIGH_TRADE_REGULARITY', 'FAST_SETTLEMENT', 'LOW_CUSTOMER_RG', 'STABLE_PARTICIPATION'];
-    const negativeDrivers = ['SLOW_SETTLEMENT', 'LIQUIDITY_STRESS', 'INCONSISTENT_TRADING', 'CRITICAL_BEHAVIORAL_STRESS'];
-
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 font-sans text-xs pt-2 pb-4 px-2 border-t border-slate-100 bg-slate-50/20">
-        
-        {/* 1. Recent Activity */}
-        <div className="bg-white border border-slate-200 p-4 rounded-xl space-y-2.5 shadow-sm">
-          <span className="font-headline font-bold text-[10px] text-slate-400 uppercase tracking-widest block border-b border-slate-100 pb-1.5">
-            1. Recent Activity
-          </span>
-          <div className="space-y-2 text-slate-500">
-            <div className="leading-tight">
-              <span className="font-mono text-[9px] text-slate-400 block">06/10/2026</span>
-              <p className="font-medium text-slate-700 mt-0.5">Invoice INV-2026-981 settled (₹24,150.00)</p>
-            </div>
-            <div className="leading-tight">
-              <span className="font-mono text-[9px] text-slate-400 block">05/28/2026</span>
-              <p className="font-medium text-slate-700 mt-0.5">Order executed ORD-2026-441 (₹48,250.00)</p>
-            </div>
-          </div>
-        </div>
-
-        {/* 2. Payment Trend */}
-        <div className="bg-white border border-slate-200 p-4 rounded-xl space-y-2.5 shadow-sm">
-          <span className="font-headline font-bold text-[10px] text-slate-400 uppercase tracking-widest block border-b border-slate-100 pb-1.5">
-            2. Payment Trend
-          </span>
-          <div className="space-y-2 text-slate-500">
-            <div>
-              <span className="text-slate-400 block font-medium">Avg settlement velocity:</span>
-              <strong className="text-slate-800 text-sm font-mono mt-0.5 block">14.2 Days (Net-30)</strong>
-            </div>
-            <div>
-              <span className="text-slate-400 block font-medium">Overdue delinquency:</span>
-              <span className={`font-semibold block mt-0.5 ${isStressed ? 'text-red-600' : 'text-emerald-600'}`}>
-                {isStressed ? 'Slightly slow clearance' : 'Prompt payment cycle'}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* 3. Risk Drivers */}
-        <div className="bg-white border border-slate-200 p-4 rounded-xl space-y-2.5 shadow-sm">
-          <span className="font-headline font-bold text-[10px] text-slate-400 uppercase tracking-widest block border-b border-slate-100 pb-1.5">
-            3. Risk Drivers
-          </span>
-          <div className="space-y-1.5">
-            {isStressed ? (
-              <div className="space-y-1">
-                <Badge variant="danger" size="sm">LIQUIDITY_STRESS</Badge>
-                <p className="text-slate-500 text-[11px] leading-tight">Aging outstanding balances exceed credit limit rules.</p>
-              </div>
-            ) : (
-              <p className="text-slate-400 italic font-medium pt-1">No significant risk drivers identified.</p>
-            )}
-          </div>
-        </div>
-
-        {/* 4. Growth Signals */}
-        <div className="bg-white border border-slate-200 p-4 rounded-xl space-y-2.5 shadow-sm">
-          <span className="font-headline font-bold text-[10px] text-slate-400 uppercase tracking-widest block border-b border-slate-100 pb-1.5">
-            4. Growth Signals
-          </span>
-          <div className="space-y-1.5">
-            {!isStressed ? (
-              <div className="space-y-1">
-                <Badge variant="accent" size="sm">HIGH_TRADE_REGULARITY</Badge>
-                <p className="text-slate-500 text-[11px] leading-tight">Order volume increasing alongside prompt settlements.</p>
-              </div>
-            ) : (
-              <p className="text-slate-400 italic font-medium pt-1">Growth capacity muted by active exposures.</p>
-            )}
-          </div>
-        </div>
-
-        {/* 5. Recommendations */}
-        <div className="bg-white border border-slate-200 p-4 rounded-xl space-y-2.5 shadow-sm flex flex-col justify-between">
-          <div>
-            <span className="font-headline font-bold text-[10px] text-slate-400 uppercase tracking-widest block border-b border-slate-100 pb-1.5">
-              5. Recommendations
-            </span>
-            <p className="text-slate-600 font-medium leading-relaxed mt-2">
-              {isStressed 
-                ? 'Tighten credit limits, suspend Net-30 term privileges.' 
-                : 'Offer Net-45 term rewards or expand credit allocation.'}
-            </p>
-          </div>
-          <div className="pt-2 flex gap-2" onClick={(e) => e.stopPropagation()}>
-            <Link 
-              href={`/customer/${row.customer_id}`} 
-              className="w-full text-center px-2 py-1.5 bg-teal-700 hover:bg-teal-800 text-white font-bold text-[10px] rounded-lg transition-colors uppercase tracking-wider block"
-            >
-              Analyze Dossier
-            </Link>
-          </div>
-        </div>
-
-      </div>
-    );
+    return <CustomerRowExpansionPanel customerId={row.customer_id} safetyScore={row.safety_score} />;
   };
 
   const headerActions = (

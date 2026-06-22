@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useDashboardOverview, useDashboardQueues } from '@/hooks/useDashboard';
+import { useDashboardOverview, useDashboardQueues, useDashboardGraphs } from '@/hooks/useDashboard';
 import { useAlerts } from '@/hooks/queries/useAlerts';
 import { useAcknowledgeAlert } from '@/hooks/mutations/useAcknowledgeAlert';
 import { useAlertsCount } from '@/hooks/queries/useAlertsCount';
@@ -22,6 +22,7 @@ import MetricCard from '@/components/ui/MetricCard';
 import Table, { TableColumn } from '@/components/ui/Table';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import UnifiedBehaviorGraph from '@/components/ui/UnifiedBehaviorGraph';
 
 import {
   ShieldAlert,
@@ -32,7 +33,8 @@ import {
   RefreshCw,
   Sliders,
   History,
-  Phone
+  Phone,
+  Activity
 } from 'lucide-react';
 import { AlertData } from '@/services/alerts.service';
 import { Customer } from '@/types/customer';
@@ -71,10 +73,12 @@ function DashboardPageContent() {
   const { data: alertsCount, isLoading: isAlertsCountLoading, isError: isAlertsCountError } = useAlertsCount();
   const { improving, isLoading: isQueuesLoading, isError: isQueuesError } = useDashboardQueues();
   const { data: alertsData, isLoading: isAlertsLoading, isError: isAlertsError } = useAlerts({ status: 'ACTIVE', limit: 5 });
+  const alertsList = alertsData ? (Array.isArray(alertsData) ? alertsData : alertsData.items) : [];
   const { data: customersData, isLoading: isCustomersLoading, isError: isCustomersError } = useCustomers({ sort_by: 'collection_score', sort_order: 'desc', limit: 10 });
   const { data: decisionsData, isLoading: isDecisionsLoading, isError: isDecisionsError } = useDecisionHistory();
   const { data: outreachData, isLoading: isOutreachLoading, isError: isOutreachError } = useCollectionsActivities({ limit: 10 });
   const { data: commitmentsData, isLoading: isCommitmentsLoading } = usePaymentCommitments({ status: 'PENDING' });
+  const { data: graphsTimeline, isLoading: isChartsLoading, isError: isChartsError } = useDashboardGraphs(365, 'monthly');
 
   const acknowledgeMutation = useAcknowledgeAlert();
 
@@ -135,16 +139,15 @@ function DashboardPageContent() {
             {checklistItems.map((item) => (
               <div key={item.key} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200/60">
                 <div className="flex items-center gap-3">
-                  <span className={`material-symbols-outlined text-[20px] ${
-                    checklist[item.key] ? 'text-teal-600' : 'text-slate-300'
-                  }`}>
+                  <span className={`material-symbols-outlined text-[20px] ${checklist[item.key] ? 'text-teal-600' : 'text-slate-300'
+                    }`}>
                     {checklist[item.key] ? 'check_circle' : 'radio_button_unchecked'}
                   </span>
                   <span className={`font-semibold text-sm ${checklist[item.key] ? 'text-slate-800' : 'text-slate-500'}`}>
                     {item.label}
                   </span>
                 </div>
-                
+
                 {!checklist[item.key] && (
                   <div>
                     {item.key === 'firstUser' && (
@@ -185,45 +188,90 @@ function DashboardPageContent() {
   const outstandingExposureValue = isOverviewError
     ? 'Capability unavailable in frozen backend'
     : isOverviewLoading
-    ? 'Loading...'
-    : overview?.outstanding_exposure !== undefined
-    ? formatCurrency(overview.outstanding_exposure)
-    : 'Capability unavailable in frozen backend';
+      ? 'Loading...'
+      : overview?.outstanding_total !== undefined
+        ? formatCurrency(overview.outstanding_total)
+        : 'Capability unavailable in frozen backend';
 
-  const outstandingExposureDelta = overview?.comparison_deltas?.outstanding_exposure
-    ? overview.comparison_deltas.outstanding_exposure / 100
+  const outstandingExposureDelta = (overview?.outstanding_total && overview?.outstanding_previous)
+    ? ((overview.outstanding_total - overview.outstanding_previous) / overview.outstanding_previous)
     : undefined;
 
   // 2. Critical Alerts
   const criticalAlertsValue = isAlertsCountError
     ? 'Capability unavailable in frozen backend'
     : isAlertsCountLoading
-    ? 'Loading...'
-    : alertsCount?.critical !== undefined
-    ? `${alertsCount.critical} Critical`
-    : 'Capability unavailable in frozen backend';
+      ? 'Loading...'
+      : alertsCount?.critical !== undefined
+        ? `${alertsCount.critical} Critical`
+        : 'Capability unavailable in frozen backend';
 
   // 3. Collection Backlog
   const collectionBacklogValue = isOverviewError
     ? 'Capability unavailable in frozen backend'
     : isOverviewLoading
-    ? 'Loading...'
-    : overview?.overdue_exposure !== undefined
-    ? formatCurrency(overview.overdue_exposure)
-    : 'Capability unavailable in frozen backend';
+      ? 'Loading...'
+      : overview?.overdue_total !== undefined
+        ? formatCurrency(overview.overdue_total)
+        : 'Capability unavailable in frozen backend';
 
-  const collectionBacklogDelta = overview?.comparison_deltas?.collections_total
-    ? overview.comparison_deltas.collections_total / -100
+  const collectionBacklogDelta = (overview?.overdue_total && overview?.overdue_previous)
+    ? ((overview.overdue_total - overview.overdue_previous) / overview.overdue_previous)
     : undefined;
 
   // 4. Recovery Candidates
   const recoveryCandidatesValue = isQueuesError
     ? 'Capability unavailable in frozen backend'
     : isQueuesLoading
-    ? 'Loading...'
-    : improving?.data?.length !== undefined
-    ? `${improving.data.length} Accounts`
-    : 'Capability unavailable in frozen backend';
+      ? 'Loading...'
+      : improving?.data?.length !== undefined
+        ? `${improving.data.length} Accounts`
+        : 'Capability unavailable in frozen backend';
+
+  // 5. Commercial Performance Metrics
+  const salesValue = isOverviewError
+    ? 'Capability unavailable in frozen backend'
+    : isOverviewLoading
+      ? 'Loading...'
+      : overview?.sales_total !== undefined
+        ? formatCurrency(overview.sales_total)
+        : 'Capability unavailable in frozen backend';
+
+  const salesDelta = (overview?.sales_total && overview?.sales_previous)
+    ? ((overview.sales_total - overview.sales_previous) / overview.sales_previous)
+    : undefined;
+
+  const collectionsValue = isOverviewError
+    ? 'Capability unavailable in frozen backend'
+    : isOverviewLoading
+      ? 'Loading...'
+      : overview?.collections_total !== undefined
+        ? formatCurrency(overview.collections_total)
+        : 'Capability unavailable in frozen backend';
+
+  const collectionsDelta = (overview?.collections_total && overview?.collections_previous)
+    ? ((overview.collections_total - overview.collections_previous) / overview.collections_previous)
+    : undefined;
+
+  const healthValue = isOverviewError
+    ? 'Capability unavailable in frozen backend'
+    : isOverviewLoading
+      ? 'Loading...'
+      : overview?.commercial_health_index !== undefined
+        ? `${overview.commercial_health_index.toFixed(2)}%`
+        : 'Capability unavailable in frozen backend';
+
+  const healthDelta = (overview?.commercial_health_index && overview?.commercial_health_previous)
+    ? ((overview.commercial_health_index - overview.commercial_health_previous) / overview.commercial_health_previous)
+    : undefined;
+
+  const activeCustomersValue = isOverviewError
+    ? 'Capability unavailable in frozen backend'
+    : isOverviewLoading
+      ? 'Loading...'
+      : overview?.active_customers !== undefined
+        ? `${overview.active_customers} Accounts`
+        : 'Capability unavailable in frozen backend';
 
   // Columns for tables
   const alertColumns: TableColumn<AlertData>[] = [
@@ -447,28 +495,45 @@ function DashboardPageContent() {
           label="Outstanding Exposure"
           value={outstandingExposureValue}
           delta={outstandingExposureDelta}
-          deltaLabel={outstandingExposureDelta !== undefined ? "Active Exposure delta" : undefined}
           icon={ShieldAlert}
         />
         <MetricCard
-          label="Critical Alerts"
-          value={criticalAlertsValue}
-          icon={AlertTriangle}
-          variant={alertsCount?.critical ? 'error' : 'default'}
+          label="Total Sales Volume"
+          value={salesValue}
+          delta={salesDelta}
+          icon={Activity}
         />
         <MetricCard
-          label="Collection Backlog"
-          value={collectionBacklogValue}
-          delta={collectionBacklogDelta}
-          deltaLabel={collectionBacklogDelta !== undefined ? "Backlog delta" : undefined}
+          label="Total Collections Volume"
+          value={collectionsValue}
+          delta={collectionsDelta}
           icon={Briefcase}
-          variant="warning"
+          variant="success"
         />
         <MetricCard
-          label="Recovery Candidates"
-          value={recoveryCandidatesValue}
+          label="Commercial Health Index"
+          value={healthValue}
+          delta={healthDelta}
+          icon={Layers}
+        />
+        <MetricCard
+          label="Active Accounts"
+          value={activeCustomersValue}
           icon={Zap}
-          variant="success"
+        />
+      </div>
+
+      {/* Portfolio Behavior Timeline Graph */}
+      <div className="space-y-3">
+        <h3 className="font-headline text-lg font-bold text-slate-800 tracking-tight flex items-center gap-2">
+          <Activity className="w-5 h-5 text-teal-600" /> Portfolio Behavior Timeline
+        </h3>
+        <UnifiedBehaviorGraph
+          timeline={graphsTimeline || []}
+          isPortfolio={true}
+          isLoading={isChartsLoading}
+          isError={isChartsError}
+          height={320}
         />
       </div>
 
@@ -478,7 +543,7 @@ function DashboardPageContent() {
         <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
           <Table
             columns={alertColumns}
-            data={alertsData || []}
+            data={alertsList}
             isLoading={isAlertsLoading}
             isError={isAlertsError}
             errorMessage={isAlertsError ? "Priority alerts feed is unavailable in frozen backend" : undefined}

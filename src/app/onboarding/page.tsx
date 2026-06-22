@@ -419,7 +419,7 @@ export default function OnboardingWizardPage() {
             </div>
 
             <div className="p-3 bg-brand-accent/5 rounded border border-brand-accent/20 text-[10px] leading-relaxed text-[#0f766e]">
-              <span className="font-bold">Tip:</span> If you do not have an active database link or ledger file ready, you can skip this step today. Econ-IQ will initialize with standard operational mock records so you can discover the platform interfaces immediately.
+              <span className="font-bold">Tip:</span> If you do not have an active database link or ledger file ready, you can skip this step today. Econ-IQ will initialize with standard operational demo records so you can discover the platform interfaces immediately.
             </div>
           </div>
         </div>

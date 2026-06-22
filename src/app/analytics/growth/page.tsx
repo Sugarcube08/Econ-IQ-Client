@@ -1,19 +1,43 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useDashboardGraphs, useTopContributors } from '@/hooks/useDashboard';
+import { useDashboardGraphs } from '@/hooks/useDashboard';
+import { useGrowthAnalytics } from '@/hooks/queries/useGrowthAnalytics';
 import { formatCurrency, formatPercent } from '@/lib/utils';
 import Table, { TableColumn } from '@/components/ui/Table';
 import UnifiedBehaviorGraph from '@/components/ui/UnifiedBehaviorGraph';
-import { TrendingUp, ArrowRight, Sparkles } from 'lucide-react';
+import { TrendingUp, ArrowRight, Search } from 'lucide-react';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
+import Button from '@/components/ui/Button';
 
 function GrowthAnalyticsPageContent() {
-  const { data: graphsTimeline, isLoading: isChartsLoading, isError: isChartsError } = useDashboardGraphs(365, 'monthly');
-  const { data: topContributors, isLoading: isContributorsLoading } = useTopContributors();
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [sortBy, setSortBy] = useState('contribution');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
-  const isLoading = isChartsLoading || isContributorsLoading;
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Load backend growth metrics and contributors list
+  const { data: growthData, isLoading: isGrowthLoading } = useGrowthAnalytics({
+    page,
+    limit: 10,
+    search: debouncedSearch || undefined,
+    sort_by: sortBy,
+    sort_order: sortOrder,
+  });
+
+  const { data: graphsTimeline, isLoading: isChartsLoading, isError: isChartsError } = useDashboardGraphs(365, 'monthly');
+
+  const isLoading = isGrowthLoading || isChartsLoading;
 
   if (isLoading) {
     return (
@@ -24,61 +48,71 @@ function GrowthAnalyticsPageContent() {
     );
   }
 
-  // Top contributors list
-  const contributors = (Array.isArray(topContributors) ? topContributors : []).map(item => ({
-    customer_id: item.customer_id,
-    customer_name: item.customer_name || 'Commercial Account',
-    contribution_percent: item.contribution_percent,
-    sales_total: item.sales_total,
-    trust_score: item.trust_score !== undefined ? item.trust_score : 0.8
-  }));
+  const contributors = growthData?.items || [];
+  const totalPages = growthData?.total_pages || 1;
+  const totalRecords = growthData?.total || 0;
 
-  const columns: TableColumn<typeof contributors[0]>[] = [
+  const handleSort = (key: string) => {
+    let backendKey = key;
+    if (key === 'sales_volume') {
+      backendKey = 'sales_volume';
+    } else if (key === 'contribution') {
+      backendKey = 'contribution';
+    } else if (key === 'growth_rate') {
+      backendKey = 'growth_rate';
+    }
+    const isAsc = sortBy === backendKey && sortOrder === 'asc';
+    setSortBy(backendKey);
+    setSortOrder(isAsc ? 'desc' : 'asc');
+    setPage(1);
+  };
+
+  const columns: TableColumn<any>[] = [
     {
-      key: 'customer_name',
+      key: 'name',
       header: 'Customer Partner',
       pinned: true,
       width: 250,
       render: (row) => (
         <div>
           <Link href={`/customer/${row.customer_id}`} className="font-semibold text-brand-accent hover:underline text-sm block">
-            {row.customer_name}
+            {row.name || row.customer_name || 'Commercial Account'}
           </Link>
         </div>
       )
     },
     {
-      key: 'sales_total',
+      key: 'sales_volume',
       header: 'Sales Volume (365d)',
       sortable: true,
       align: 'right',
       width: 180,
       render: (row) => (
         <span className="font-mono font-bold text-primary text-sm">
-          {formatCurrency(row.sales_total)}
+          {formatCurrency(row.sales_volume)}
         </span>
       )
     },
     {
-      key: 'contribution_percent',
+      key: 'contribution',
       header: 'Portfolio Contribution',
       sortable: true,
       align: 'right',
       width: 180,
       render: (row) => (
         <span className="font-mono font-bold text-brand-accent text-sm">
-          {formatPercent(row.contribution_percent)}
+          {formatPercent(row.contribution)}
         </span>
       )
     },
     {
-      key: 'trust_score',
-      header: 'Trust Score',
+      key: 'growth_rate',
+      header: 'Growth Rate',
       sortable: true,
       width: 140,
       render: (row) => (
         <span className="font-mono font-bold text-primary">
-          {(row.trust_score * 100).toFixed(0)}%
+          {formatPercent(row.growth_rate)}
         </span>
       )
     },
@@ -99,6 +133,11 @@ function GrowthAnalyticsPageContent() {
   ];
 
   const totalSalesSum = (graphsTimeline || []).reduce((acc, curr) => acc + (curr.portfolio_purchase || 0), 0);
+
+  // Directly bind backend values with no interpretations/heuristics
+  const topAccountShareVal = growthData?.top_account_share ?? 0;
+  const growthTrajectoryVal = growthData?.growth_trajectory ?? 'STABLE';
+  const opportunityLabelVal = growthData?.opportunity_label ?? 'MARKET_EXPANSION';
 
   return (
     <div className="space-y-8 font-sans">
@@ -140,31 +179,49 @@ function GrowthAnalyticsPageContent() {
             </div>
             <div className="flex justify-between border-b border-outline-variant/10 pb-2">
               <span className="text-outline uppercase">Top Account share:</span>
-              <span className="font-bold text-brand-accent">24.5% Portfolio Concentration</span>
+              <span className="font-bold text-brand-accent">{formatPercent(topAccountShareVal)} Portfolio Concentration</span>
             </div>
             <div className="flex justify-between border-b border-outline-variant/10 pb-2">
               <span className="text-outline uppercase">Growth Trajectory:</span>
-              <span className="font-bold text-brand-accent uppercase">ACCELERATING</span>
+              <span className="font-bold text-brand-accent uppercase">{growthTrajectoryVal}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-outline uppercase">Opportunity Index:</span>
-              <span className="font-mono text-brand-gold font-bold">STIMULUS_ELAPSED</span>
+              <span className="font-mono text-brand-gold font-bold">{opportunityLabelVal}</span>
             </div>
           </div>
         </div>
 
       </div>
 
+      {/* Search Toolbar */}
+      <div className="flex gap-2 max-w-sm bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
+        <div className="relative flex-grow">
+          <input
+            type="text"
+            placeholder="Search contributors..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-4 py-1.5 border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-brand-accent bg-white text-slate-800"
+          />
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2" />
+        </div>
+      </div>
+
       {/* Top Portfolio Contributors */}
       <div className="space-y-4">
-        <h3 className="font-headline text-xl font-bold text-primary tracking-tight">Top Portfolio Contributors</h3>
+        <h3 className="font-headline text-xl font-bold text-primary tracking-tight">Top Portfolio Contributors ({totalRecords})</h3>
         <div className="bg-surface rounded-xl overflow-hidden border border-outline-variant shadow-sm">
           <Table
             columns={columns}
             data={contributors}
-            isLoading={false}
-            sortBy="sales_total"
-            sortOrder="desc"
+            isLoading={isLoading}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSort={handleSort}
+            page={page}
+            totalPages={totalPages}
+            onPageChange={(p) => setPage(p)}
             density="standard"
           />
         </div>
@@ -180,4 +237,3 @@ export default function GrowthAnalyticsPage() {
     </RouteErrorBoundary>
   );
 }
-

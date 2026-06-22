@@ -1,10 +1,25 @@
 export interface DashboardOverview {
   active_customers: number;
   sales_total: number;
+  sales_previous?: number;
+  sales_delta?: number;
   collections_total: number;
+  collections_previous?: number;
+  collections_delta?: number;
   outstanding_exposure: number;
+  outstanding_total?: number;
+  outstanding_previous?: number;
+  outstanding_delta?: number;
   overdue_exposure?: number;
+  overdue_total?: number;
+  overdue_previous?: number;
+  overdue_delta?: number;
   health_index: number;
+  commercial_health_index?: number;
+  commercial_health_previous?: number;
+  commercial_health_delta?: number;
+  credit_limit_total?: number;
+  organization_contribution_total?: number;
   last_data_date?: string;
   comparison_deltas: {
     active_customers?: number;

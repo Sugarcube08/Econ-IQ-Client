@@ -2,26 +2,27 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
-import { useCustomers } from '@/hooks/queries/useCustomers';
 import { usePaymentCommitments } from '@/hooks/queries/usePaymentCommitments';
 import { useLogCollectionActivity } from '@/hooks/mutations/useLogCollectionActivity';
 import { useCreateCommitment } from '@/hooks/mutations/useCreateCommitment';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { usePortfolioAnalytics } from '@/hooks/queries/usePortfolioAnalytics';
+import { useCollectionQueue } from '@/hooks/queries/useCollectionQueue';
+import { formatCurrency, formatDate, formatDateTime } from '@/lib/utils';
 import Table, { TableColumn } from '@/components/ui/Table';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
-import { 
-  Phone, 
-  Mail, 
-  FileText, 
-  Calendar, 
-  DollarSign, 
-  Activity, 
-  Users, 
-  TrendingDown, 
-  PlusCircle, 
-  Clock, 
+import {
+  Phone,
+  Mail,
+  FileText,
+  Calendar,
+  DollarSign,
+  Activity,
+  Users,
+  TrendingDown,
+  PlusCircle,
+  Clock,
   ArrowRight,
   Search
 } from 'lucide-react';
@@ -43,7 +44,7 @@ function OperationsCollectionsPageContent() {
   const [limit] = useState(10);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [sortBy, setSortBy] = useState('collection_score');
+  const [sortBy, setSortBy] = useState('priority_score');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
@@ -52,11 +53,12 @@ function OperationsCollectionsPageContent() {
   }, [search]);
 
   // Queries
-  const { data: customersData, isLoading: isCustomersLoading, refetch: refetchCustomers } = useCustomers({
-    current_state: 'liquidity_stress,monitor',
+  const { data: portfolioData, refetch: refetchPortfolio } = usePortfolioAnalytics();
+
+  const { data: queueData, isLoading: isQueueLoading, refetch: refetchQueue } = useCollectionQueue({
     page,
     limit,
-    sort_by: sortBy,
+    sort_by: sortBy === 'customer_name' ? 'customer_name' : sortBy,
     sort_order: sortOrder,
     search: debouncedSearch || undefined,
   });
@@ -96,9 +98,10 @@ function OperationsCollectionsPageContent() {
       });
       setShowLogModal(false);
       setSelectedCustomerId(null);
-      refetchCustomers();
+      refetchQueue();
+      refetchPortfolio();
     } catch (err) {
-      console.error('Failed to log activity:', err);
+      console.error('Failed to log dunning action:', err);
     }
   };
 
@@ -115,38 +118,48 @@ function OperationsCollectionsPageContent() {
       setShowPromiseModal(false);
       setSelectedCustomerId(null);
       refetchCommitments();
+      refetchQueue();
+      refetchPortfolio();
     } catch (err) {
       console.error('Failed to register payment promise:', err);
     }
   };
 
-  // Process customer rows
+  // Process customer rows from backend collection-queue
   const overdueQueueList = useMemo(() => {
-    const list = customersData?.data?.customers || [];
+    const list = queueData?.items || [];
     return list.map((c) => ({
       customer_id: c.customer_id,
       customer_name: c.customer_name || 'Wholesale Debtor Account',
-      city: c.city || 'Regional Scope',
-      collection_score: c.collection_score * 100,
-      outstanding: c.outstanding_current,
-      state: c.state,
+      outstanding: c.outstanding ?? 0,
+      recovered_ytd: c.recovered_ytd ?? 0,
+      priority_score: c.priority_score ?? 0,
+      priority_level: c.priority_level || 'LOW',
+      primary_dunning_reason: c.primary_dunning_reason || 'DPD Threshold Exceeded',
+      last_outreach_date: c.last_outreach_date,
     }));
-  }, [customersData]);
+  }, [queueData]);
 
-  const pagination = customersData?.metadata?.pagination || {
-    page: 1,
-    limit: 10,
-    total_records: 0,
-    total_pages: 0,
-    has_next: false,
-    has_previous: false,
-  };
+  const pagination = useMemo(() => {
+    const pageVal = queueData?.pagination?.page || 1;
+    const totalPagesVal = queueData?.pagination?.total_pages || 0;
+    const totalVal = queueData?.pagination?.total || 0;
+    const limitVal = queueData?.pagination?.limit || 10;
 
-  const totalOverdueVal = useMemo(() => {
-    return overdueQueueList.reduce((acc, curr) => acc + curr.outstanding, 0);
-  }, [overdueQueueList]);
+    return {
+      page: pageVal,
+      limit: limitVal,
+      total_records: totalVal,
+      total_pages: totalPagesVal,
+      has_next: pageVal < totalPagesVal,
+      has_previous: pageVal > 1,
+    };
+  }, [queueData]);
 
   const handleSort = (field: string) => {
+    // Only sort by fields supported in /analytics/collection-queue parameter spec
+    if (field !== 'customer_name' && field !== 'priority_score' && field !== 'outstanding') return;
+
     if (sortBy === field) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
@@ -162,42 +175,113 @@ function OperationsCollectionsPageContent() {
       header: 'Customer Account',
       sortable: true,
       pinned: true,
-      width: 250,
+      width: 200,
       render: (row) => (
         <div>
-          <Link href={`/customer/${row.customer_id}`} className="font-semibold text-brand-accent hover:underline text-sm block">
+          <Link href={`/customer/${row.customer_id}`} className="font-semibold text-brand-accent hover:underline text-xs block">
             {row.customer_name}
           </Link>
         </div>
       )
     },
     {
-      key: 'collection_score',
-      header: 'Urgency Index',
+      key: 'priority_score',
+      header: 'CPI Score',
       sortable: true,
-      width: 130,
+      width: 90,
       render: (row) => (
         <span className="font-mono font-bold text-red-600 text-sm">
-          {row.collection_score.toFixed(0)}%
+          {row.priority_score.toFixed(1)}
+        </span>
+      )
+    },
+    {
+      key: 'priority_level',
+      header: 'Priority',
+      sortable: false,
+      width: 110,
+      render: (row) => {
+        const variants: Record<string, 'danger' | 'warning' | 'info'> = {
+          CRITICAL: 'danger',
+          HIGH: 'warning',
+          MEDIUM: 'warning',
+          LOW: 'info',
+        };
+        const isCritical = row.priority_level === 'CRITICAL';
+        const isHigh = row.priority_level === 'HIGH';
+        const isMedium = row.priority_level === 'MEDIUM';
+
+        let customClasses = '';
+        if (isCritical) {
+          customClasses = 'animate-pulse border-red-500/50 text-red-600 bg-red-50 font-extrabold';
+        } else if (isHigh) {
+          customClasses = 'border-amber-500/55 text-amber-700 bg-amber-50 font-extrabold';
+        } else if (isMedium) {
+          customClasses = 'border-yellow-400/50 text-yellow-750 bg-yellow-50 font-bold';
+        } else {
+          customClasses = 'border-slate-200 text-slate-500 bg-slate-50 font-normal normal-case';
+        }
+
+        return (
+          <Badge variant={variants[row.priority_level] || 'info'} size="sm" className={customClasses}>
+            <span className="flex items-center gap-1">
+              {isCritical && <span className="w-1.5 h-1.5 bg-red-600 rounded-full animate-ping"></span>}
+              {row.priority_level}
+            </span>
+          </Badge>
+        );
+      }
+    },
+    {
+      key: 'primary_dunning_reason',
+      header: 'Primary Reason',
+      sortable: false,
+      width: 180,
+      render: (row) => (
+        <span className="font-semibold text-slate-700 text-xs truncate block max-w-[170px]" title={row.primary_dunning_reason}>
+          {row.primary_dunning_reason}
         </span>
       )
     },
     {
       key: 'outstanding',
-      header: 'Overdue Amount',
+      header: 'Outstanding Exposure',
       sortable: true,
       align: 'right',
-      width: 170,
+      width: 150,
       render: (row) => (
-        <span className="font-mono font-bold text-slate-900 text-sm">
+        <span className="font-mono font-bold text-slate-900 text-xs">
           {formatCurrency(row.outstanding)}
+        </span>
+      )
+    },
+    {
+      key: 'recovered_ytd',
+      header: 'Recovered YTD',
+      sortable: false,
+      align: 'right',
+      width: 130,
+      render: (row) => (
+        <span className="font-mono text-slate-600 text-xs">
+          {formatCurrency(row.recovered_ytd)}
+        </span>
+      )
+    },
+    {
+      key: 'last_outreach_date',
+      header: 'Last Outreach',
+      sortable: false,
+      width: 140,
+      render: (row) => (
+        <span className="font-mono text-slate-500 text-[11px]">
+          {row.last_outreach_date ? formatDateTime(row.last_outreach_date) : <span className="text-slate-400 italic">No recent outreach</span>}
         </span>
       )
     },
     {
       key: 'workflow_actions',
       header: 'Outreach Outreach Logger',
-      width: 200,
+      width: 160,
       render: (row) => (
         <div className="flex gap-2">
           <button
@@ -235,7 +319,7 @@ function OperationsCollectionsPageContent() {
       key: 'actions',
       header: 'Workspace',
       align: 'center',
-      width: 130,
+      width: 90,
       render: (row) => (
         <Link
           href={`/customer/${row.customer_id}`}
@@ -311,7 +395,7 @@ function OperationsCollectionsPageContent() {
 
   return (
     <div className="space-y-8 font-sans">
-      
+
       {/* Header */}
       <div>
         <h2 className="font-headline text-3xl font-extrabold text-slate-900 tracking-tight">Collections Command Center</h2>
@@ -321,35 +405,222 @@ function OperationsCollectionsPageContent() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {/* Outstanding Receivables */}
         <div className="bg-surface border border-outline-variant p-6 rounded-xl flex items-center justify-between shadow-sm">
           <div className="space-y-1">
-            <span className="text-[10px] font-bold text-outline uppercase tracking-wider block">Stressed Accounts</span>
-            <span className="font-headline text-3xl font-extrabold text-slate-900">{pagination.total_records}</span>
+            <span className="text-[10px] font-bold text-outline uppercase tracking-wider block">Outstanding Exposure</span>
+            <span className="font-headline text-3xl font-extrabold text-slate-900">
+              {formatCurrency(portfolioData?.summary?.total_outstanding ?? 0)}
+            </span>
           </div>
           <div className="p-3 bg-red-100 text-red-600 rounded-lg border border-red-200">
-            <Users className="w-6 h-6" />
-          </div>
-        </div>
-
-        <div className="bg-surface border border-outline-variant p-6 rounded-xl flex items-center justify-between shadow-sm">
-          <div className="space-y-1">
-            <span className="text-[10px] font-bold text-outline uppercase tracking-wider block">Total Stressed Receivables</span>
-            <span className="font-headline text-3xl font-extrabold text-slate-900">{formatCurrency(totalOverdueVal)}</span>
-          </div>
-          <div className="p-3 bg-amber-100 text-amber-600 rounded-lg border border-amber-200">
             <DollarSign className="w-6 h-6" />
           </div>
         </div>
 
+        {/* Recovered Past 30d */}
         <div className="bg-surface border border-outline-variant p-6 rounded-xl flex items-center justify-between shadow-sm">
           <div className="space-y-1">
-            <span className="text-[10px] font-bold text-outline uppercase tracking-wider block">Active Promises Kept Rate</span>
-            <span className="font-headline text-3xl font-extrabold text-[#c8a96b]">88%</span>
+            <span className="text-[10px] font-bold text-outline uppercase tracking-wider block">Recovered (Past 30d)</span>
+            <span className="font-headline text-3xl font-extrabold text-slate-900">
+              {formatCurrency(portfolioData?.summary?.total_recovered_30d ?? 0)}
+            </span>
+          </div>
+          <div className="p-3 bg-emerald-100 text-emerald-600 rounded-lg border border-emerald-200">
+            <Activity className="w-6 h-6" />
+          </div>
+        </div>
+
+        {/* Active Promises Count */}
+        <div className="bg-surface border border-outline-variant p-6 rounded-xl flex items-center justify-between shadow-sm">
+          <div className="space-y-1">
+            <span className="text-[10px] font-bold text-outline uppercase tracking-wider block">Active Promises</span>
+            <span className="font-headline text-3xl font-extrabold text-slate-900">
+              {portfolioData?.summary?.active_commitments_count ?? 0}
+            </span>
+          </div>
+          <div className="p-3 bg-amber-100 text-amber-600 rounded-lg border border-amber-200">
+            <Clock className="w-6 h-6" />
+          </div>
+        </div>
+
+        {/* YTD Recovery Rate */}
+        <div className="bg-surface border border-outline-variant p-6 rounded-xl flex items-center justify-between shadow-sm">
+          <div className="space-y-1">
+            <span className="text-[10px] font-bold text-outline uppercase tracking-wider block">YTD Recovery Rate</span>
+            <span className="font-headline text-3xl font-extrabold text-[#c8a96b]">
+              {portfolioData?.summary?.recovery_rate_ytd !== undefined
+                ? `${(portfolioData.summary.recovery_rate_ytd * 100).toFixed(0)}%`
+                : '—'}
+            </span>
           </div>
           <div className="p-3 bg-teal-100 text-teal-600 rounded-lg border border-teal-200">
             <TrendingDown className="w-6 h-6" />
           </div>
+        </div>
+      </div>
+
+      {/* Priority and Aging Breakdown Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Priority Inventory Card */}
+        <div className="bg-surface border border-outline-variant p-6 rounded-xl shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h4 className="font-headline text-xs font-bold text-slate-500 uppercase tracking-wider">
+              Queue Priority Inventory
+            </h4>
+            <span className="text-[9px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
+              CPI SCORE DISTRIBUTION
+            </span>
+          </div>
+          {portfolioData?.priority_distribution ? (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="bg-red-50/50 border border-red-100 p-3 rounded-lg text-center relative overflow-hidden group hover:shadow-md transition-shadow">
+                <span className="text-[9px] font-bold text-red-500 block mb-1">CRITICAL</span>
+                <span className="font-headline text-2xl font-extrabold text-red-600 block animate-pulse">
+                  {portfolioData.priority_distribution.critical_count}
+                </span>
+                <div className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></div>
+              </div>
+              <div className="bg-amber-50/50 border border-amber-100 p-3 rounded-lg text-center hover:shadow-md transition-shadow">
+                <span className="text-[9px] font-bold text-amber-600 block mb-1">HIGH</span>
+                <span className="font-headline text-2xl font-extrabold text-amber-700 block">
+                  {portfolioData.priority_distribution.high_count}
+                </span>
+              </div>
+              <div className="bg-yellow-50/50 border border-yellow-100 p-3 rounded-lg text-center hover:shadow-md transition-shadow">
+                <span className="text-[9px] font-bold text-yellow-600 block mb-1">MEDIUM</span>
+                <span className="font-headline text-2xl font-extrabold text-yellow-700 block">
+                  {portfolioData.priority_distribution.medium_count}
+                </span>
+              </div>
+              <div className="bg-slate-50 border border-slate-100 p-3 rounded-lg text-center hover:shadow-md transition-shadow">
+                <span className="text-[9px] font-bold text-slate-500 block mb-1">LOW</span>
+                <span className="font-headline text-2xl font-extrabold text-slate-700 block">
+                  {portfolioData.priority_distribution.low_count}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-4 text-slate-400 text-xs">No priority telemetry available</div>
+          )}
+        </div>
+
+        {/* Aging Distribution Card */}
+        <div className="bg-surface border border-outline-variant p-6 rounded-xl shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h4 className="font-headline text-xs font-bold text-slate-500 uppercase tracking-wider">
+              Receivables Aging Distribution
+            </h4>
+            <span className="text-[9px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
+              OUTSTANDING BY DPD
+            </span>
+          </div>
+          {portfolioData?.aging_distribution ? (
+            <div className="space-y-4">
+              {/* Stacked bar representation */}
+              {(() => {
+                const agingDist = portfolioData.aging_distribution;
+                const totalAging = (
+                  (agingDist.current || 0) +
+                  (agingDist['1_30_days'] || 0) +
+                  (agingDist['31_60_days'] || 0) +
+                  (agingDist['61_90_days'] || 0) +
+                  (agingDist['90_plus_days'] || 0)
+                ) || 1;
+
+                const currentPct = ((agingDist.current || 0) / totalAging) * 100;
+                const d1_30Pct = ((agingDist['1_30_days'] || 0) / totalAging) * 100;
+                const d31_60Pct = ((agingDist['31_60_days'] || 0) / totalAging) * 100;
+                const d61_90Pct = ((agingDist['61_90_days'] || 0) / totalAging) * 100;
+                const d90PlusPct = ((agingDist['90_plus_days'] || 0) / totalAging) * 100;
+
+                return (
+                  <div className="space-y-3">
+                    {/* The Stacked Bar */}
+                    <div className="h-4 w-full bg-slate-100 rounded-full flex overflow-hidden shadow-inner">
+                      {agingDist.current > 0 && (
+                        <div
+                          style={{ width: `${currentPct}%` }}
+                          className="bg-emerald-500 transition-all duration-500 hover:opacity-90"
+                          title={`Current: ${formatCurrency(agingDist.current)} (${currentPct.toFixed(1)}%)`}
+                        />
+                      )}
+                      {agingDist['1_30_days'] > 0 && (
+                        <div
+                          style={{ width: `${d1_30Pct}%` }}
+                          className="bg-sky-400 transition-all duration-500 hover:opacity-90"
+                          title={`1-30 Days: ${formatCurrency(agingDist['1_30_days'])} (${d1_30Pct.toFixed(1)}%)`}
+                        />
+                      )}
+                      {agingDist['31_60_days'] > 0 && (
+                        <div
+                          style={{ width: `${d31_60Pct}%` }}
+                          className="bg-amber-400 transition-all duration-500 hover:opacity-90"
+                          title={`31-60 Days: ${formatCurrency(agingDist['31_60_days'])} (${d31_60Pct.toFixed(1)}%)`}
+                        />
+                      )}
+                      {agingDist['61_90_days'] > 0 && (
+                        <div
+                          style={{ width: `${d61_90Pct}%` }}
+                          className="bg-orange-500 transition-all duration-500 hover:opacity-90"
+                          title={`61-90 Days: ${formatCurrency(agingDist['61_90_days'])} (${d61_90Pct.toFixed(1)}%)`}
+                        />
+                      )}
+                      {agingDist['90_plus_days'] > 0 && (
+                        <div
+                          style={{ width: `${d90PlusPct}%` }}
+                          className="bg-rose-650 transition-all duration-500 hover:opacity-90 animate-pulse"
+                          title={`90+ Days: ${formatCurrency(agingDist['90_plus_days'])} (${d90PlusPct.toFixed(1)}%)`}
+                        />
+                      )}
+                    </div>
+
+                    {/* Compact Custom Legend Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[10px] font-semibold">
+                      <div className="flex items-center gap-1.5 min-w-[70px]">
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                        <div className="leading-tight">
+                          <span className="text-slate-400 block font-normal">Current</span>
+                          <span className="text-slate-900">{formatCurrency(agingDist.current)}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 min-w-[70px]">
+                        <span className="w-2.5 h-2.5 rounded-full bg-sky-400 flex-shrink-0" />
+                        <div className="leading-tight">
+                          <span className="text-slate-400 block font-normal">1-30 Days</span>
+                          <span className="text-slate-900">{formatCurrency(agingDist['1_30_days'])}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 min-w-[70px]">
+                        <span className="w-2.5 h-2.5 rounded-full bg-amber-400 flex-shrink-0" />
+                        <div className="leading-tight">
+                          <span className="text-slate-400 block font-normal">31-60 Days</span>
+                          <span className="text-slate-900">{formatCurrency(agingDist['31_60_days'])}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 min-w-[70px]">
+                        <span className="w-2.5 h-2.5 rounded-full bg-orange-500 flex-shrink-0" />
+                        <div className="leading-tight">
+                          <span className="text-slate-400 block font-normal">61-90 Days</span>
+                          <span className="text-slate-900">{formatCurrency(agingDist['61_90_days'])}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 min-w-[70px] col-span-2 sm:col-span-1">
+                        <span className="w-2.5 h-2.5 rounded-full bg-rose-650 flex-shrink-0" />
+                        <div className="leading-tight">
+                          <span className="text-slate-400 block font-normal">90+ Days</span>
+                          <span className="text-slate-900 text-red-600 font-extrabold">{formatCurrency(agingDist['90_plus_days'])}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          ) : (
+            <div className="text-center py-4 text-slate-400 text-xs">No aging distribution data available</div>
+          )}
         </div>
       </div>
 
@@ -389,7 +660,7 @@ function OperationsCollectionsPageContent() {
           <Table
             columns={overdueColumns}
             data={overdueQueueList}
-            isLoading={isCustomersLoading}
+            isLoading={isQueueLoading}
             sortBy={sortBy}
             sortOrder={sortOrder}
             onSort={handleSort}

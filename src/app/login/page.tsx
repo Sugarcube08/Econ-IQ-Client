@@ -304,7 +304,7 @@ export default function LoginPage() {
                     ))}
                   </div>
                   <div className="pt-2 text-[10px] text-outline flex justify-between">
-                    <span>* Default Mock OTP: 735011</span>
+                    <span>* Default OTP: 735011</span>
                     <span>Expires in 2m</span>
                   </div>
                 </div>

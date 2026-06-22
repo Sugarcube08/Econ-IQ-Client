@@ -43,13 +43,10 @@ export function useAuth() {
   // 4. Logout
   const logout = useMutation({
     mutationFn: async () => {
-      const refreshToken = useAuthStore.getState().refreshToken;
-      if (refreshToken) {
-        try {
-          await AuthService.logout(refreshToken);
-        } catch (e) {
-          console.error('Logout error on server:', e);
-        }
+      try {
+        await AuthService.logout();
+      } catch (e) {
+        console.error('Logout error on server:', e);
       }
       clearSession();
       router.push('/login');

@@ -4,6 +4,7 @@ import { StandardResponse } from '@/types/response';
 export interface DecisionAuditData {
   id: string;
   customer_id: string;
+  customer_name?: string;
   recommendation_id: string | null;
   action_taken: 'APPROVED' | 'REJECTED' | 'OVERRIDDEN' | string;
   performed_by: string;

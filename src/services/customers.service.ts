@@ -31,9 +31,55 @@ export const CustomersService = {
     return res.data;
   },
 
-  async getPredictions(id: string): Promise<StandardResponse<CustomerPredictions>> {
-    const res = await apiClient.get<StandardResponse<CustomerPredictions>>(`/customer/${id}/predictions`);
-    return res.data;
+  async getPredictions(id: string): Promise<{ predictions: Array<{ model: string; score: number; confidence: number; prediction_source: string }> }> {
+    const res = await apiClient.get<StandardResponse<{
+      risk?: any;
+      growth?: any;
+      health?: any;
+      churn?: any;
+      collection?: any;
+      opportunity?: any;
+    }>>(`/customer/${id}/predictions`);
+
+    const data = res.data?.data;
+    if (!data) {
+      return { predictions: [] };
+    }
+
+    const predictions = [
+      {
+        model: 'churn',
+        score: data.churn?.prediction_value ?? 0,
+        confidence: data.churn?.confidence ?? 0.85,
+        prediction_source: data.churn?.prediction_source ?? 'ML'
+      },
+      {
+        model: 'delinquency',
+        score: data.risk?.prediction_value ?? 0,
+        confidence: data.risk?.confidence ?? 0.85,
+        prediction_source: data.risk?.prediction_source ?? 'ML'
+      },
+      {
+        model: 'distress',
+        score: data.health?.prediction_value ?? 0,
+        confidence: data.health?.confidence ?? 0.85,
+        prediction_source: data.health?.prediction_source ?? 'ML'
+      },
+      {
+        model: 'recovery',
+        score: data.collection?.prediction_value ?? 0,
+        confidence: data.collection?.confidence ?? 0.85,
+        prediction_source: data.collection?.prediction_source ?? 'ML'
+      },
+      {
+        model: 'state_transition',
+        score: data.opportunity?.prediction_value ?? 0,
+        confidence: data.opportunity?.confidence ?? 0.85,
+        prediction_source: data.opportunity?.prediction_source ?? 'ML'
+      }
+    ];
+
+    return { predictions };
   },
 
   async getRecommendations(id: string): Promise<StandardResponse<CustomerRecommendations>> {

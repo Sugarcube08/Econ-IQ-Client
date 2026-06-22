@@ -15,6 +15,19 @@ export const DashboardService = {
   async getOverview(): Promise<StandardResponse<DashboardOverview>> {
     const res = await apiClient.get<StandardResponse<DashboardOverview>>('/dashboard/overview');
     if (res.data && res.data.data) {
+      const raw = res.data.data as any;
+      raw.outstanding_exposure = raw.outstanding_total || 0;
+      raw.overdue_exposure = raw.overdue_total || 0;
+      raw.health_index = raw.commercial_health_index || 0;
+      
+      raw.comparison_deltas = {
+        active_customers: raw.active_customers_delta || 0,
+        sales_total: raw.sales_delta || 0,
+        collections_total: raw.collections_delta || 0,
+        outstanding_exposure: raw.outstanding_delta || 0,
+        health_index: raw.commercial_health_delta || 0,
+      };
+
       res.data.data = validatePayload(DashboardOverviewSchema, res.data.data, 'DashboardOverviewSchema');
     }
     return res.data;

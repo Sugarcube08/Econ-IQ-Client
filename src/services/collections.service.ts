@@ -4,6 +4,7 @@ import { StandardResponse } from '@/types/response';
 export interface CollectionActivityData {
   id: string;
   customer_id: string;
+  customer_name?: string;
   user_id: string;
   activity_type: 'CALL' | 'EMAIL' | 'LETTER' | 'OTHER' | string;
   notes: string;

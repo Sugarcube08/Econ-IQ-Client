@@ -1,15 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { AnalyticsService } from '@/services/analytics.service';
 
-export function usePortfolioAnalytics(params?: {
+export function useCollectionQueue(params?: {
   page?: number;
   limit?: number;
+  search?: string;
+  priority_level?: string;
   sort_by?: string;
   sort_order?: string;
-  search?: string;
 }) {
   return useQuery({
-    queryKey: ['portfolio-analytics-overview', params],
-    queryFn: () => AnalyticsService.getPortfolioOverview(params).then((res) => res.data),
+    queryKey: ['collection-queue', params],
+    queryFn: () => AnalyticsService.getCollectionQueue(params).then((res) => res.data),
   });
 }

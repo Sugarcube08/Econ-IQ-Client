@@ -1,47 +1,187 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCustomers } from '@/hooks/queries/useCustomers';
+import { useSegments } from '@/hooks/queries/useSegments';
 import { formatCurrency } from '@/lib/utils';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 
 // UI components
 import PageHeader from '@/components/ui/PageHeader';
-import PageToolbar from '@/components/ui/PageToolbar';
 import PageContent from '@/components/ui/PageContent';
 import Table, { TableColumn } from '@/components/ui/Table';
 import Badge from '@/components/ui/Badge';
 import HealthIndicator from '@/components/ui/HealthIndicator';
 import RiskIndicator from '@/components/ui/RiskIndicator';
-import TrendIndicator from '@/components/ui/TrendIndicator';
 
 import { 
-  ShieldAlert, 
-  Clock, 
-  Zap, 
   TrendingUp, 
   ArrowRight,
-  Layers,
   Flame,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  TrendingDown,
+  Clock,
+  RefreshCw,
+  Activity
 } from 'lucide-react';
+
+const SEGMENT_CONFIGS: Record<string, {
+  name: string;
+  description: string;
+  icon: React.ComponentType<any>;
+  color: string;
+  badgeVariant: 'danger' | 'warning' | 'accent' | 'primary' | 'success';
+  recommendation: string;
+  averageRisk: string;
+  recentChanges: string;
+}> = {
+  STRESSED: {
+    name: 'Stressed',
+    description: 'Accounts exhibiting severe liquidity issues, dunning actions, or delayed clearances.',
+    icon: Flame,
+    color: 'border-red-200 bg-red-50 text-red-700',
+    badgeVariant: 'danger',
+    recommendation: 'Tighten payment terms to Net-15 immediately',
+    averageRisk: '85%',
+    recentChanges: 'Liquidity contraction',
+  },
+  DISTRESSED: {
+    name: 'Distressed',
+    description: 'Accounts in acute financial distress or severe payment defaults.',
+    icon: Flame,
+    color: 'border-red-300 bg-red-100 text-red-800',
+    badgeVariant: 'danger',
+    recommendation: 'Initiate collection agency proceedings or legal action',
+    averageRisk: '95%',
+    recentChanges: 'Severe defaults detected',
+  },
+  DECLINING: {
+    name: 'Declining',
+    description: 'Accounts showing deteriorating credit health and safety indicators.',
+    icon: TrendingDown,
+    color: 'border-red-100 bg-red-50/50 text-red-600',
+    badgeVariant: 'danger',
+    recommendation: 'Reduce credit limit exposure and set strict dunning triggers',
+    averageRisk: '75%',
+    recentChanges: 'Risk status downgrades',
+  },
+  OVERLEVERAGED: {
+    name: 'Overleveraged',
+    description: 'Accounts with credit utilization exceeding safe limits relative to trading volume.',
+    icon: AlertTriangle,
+    color: 'border-amber-200 bg-amber-50 text-amber-700',
+    badgeVariant: 'warning',
+    recommendation: 'Hold further credit extensions and request advance payment',
+    averageRisk: '65%',
+    recentChanges: 'Credit ceiling reached',
+  },
+  RECOVERING: {
+    name: 'Recovering',
+    description: 'Accounts displaying positive signs of repayment following a distressed period.',
+    icon: RefreshCw,
+    color: 'border-orange-200 bg-orange-50 text-orange-700',
+    badgeVariant: 'warning',
+    recommendation: 'Monitor payments closely, maintain current terms',
+    averageRisk: '45%',
+    recentChanges: 'Stabilizing payments',
+  },
+  DORMANT: {
+    name: 'Dormant',
+    description: 'Inactive trading accounts with minimal transaction or clearance activity.',
+    icon: Clock,
+    color: 'border-slate-200 bg-slate-50 text-slate-700',
+    badgeVariant: 'primary',
+    recommendation: 'Initiate reactivation outreach campaigns',
+    averageRisk: '30%',
+    recentChanges: 'Transaction frequency drop',
+  },
+  HEALTHY: {
+    name: 'Healthy',
+    description: 'Consistent payment cycles, stable risk profiles, and optimal transaction cadence.',
+    icon: CheckCircle,
+    color: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+    badgeVariant: 'accent',
+    recommendation: 'Propose credit limit expansion & early payment discounts',
+    averageRisk: '15%',
+    recentChanges: 'Credit profile upgrades',
+  },
+  GROWING: {
+    name: 'Growing',
+    description: 'Accounts expanding transaction volume with solid repayment indicators.',
+    icon: TrendingUp,
+    color: 'border-teal-200 bg-teal-50 text-teal-700',
+    badgeVariant: 'accent',
+    recommendation: 'Offer incentive-based terms and expand limits',
+    averageRisk: '10%',
+    recentChanges: 'Expanding sales volumes',
+  },
+  EXPANDING: {
+    name: 'Expanding',
+    description: 'Accounts with rising credit capacity and transaction volume.',
+    icon: ArrowRight,
+    color: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+    badgeVariant: 'accent',
+    recommendation: 'Strengthen partnership terms and optimize line capacity',
+    averageRisk: '8%',
+    recentChanges: 'Scaling credit capacity',
+  },
+};
+
+const getSegmentConfig = (state: string) => {
+  const key = state.toUpperCase();
+  if (SEGMENT_CONFIGS[key]) return SEGMENT_CONFIGS[key];
+  return {
+    name: state.charAt(0).toUpperCase() + state.slice(1).toLowerCase(),
+    description: `Accounts classified under ${state.toLowerCase()} segment.`,
+    icon: CheckCircle,
+    color: 'border-slate-200 bg-slate-50 text-slate-700',
+    badgeVariant: 'primary' as const,
+    recommendation: 'Maintain standard monitoring and credit terms',
+    averageRisk: '—',
+    recentChanges: 'Status updated',
+  };
+};
+
+const statePriority: Record<string, number> = {
+  DISTRESSED: 1,
+  STRESSED: 2,
+  DECLINING: 3,
+  OVERLEVERAGED: 4,
+  RECOVERING: 5,
+  DORMANT: 6,
+  HEALTHY: 7,
+  GROWING: 8,
+  EXPANDING: 9,
+};
 
 function SegmentsPageContent() {
   const router = useRouter();
-  const [selectedSegment, setSelectedSegment] = useState<string>('liquidity_stress');
-  const [timeRange, setTimeRange] = useState<'7d' | '30d'>('30d');
+  const [selectedSegment, setSelectedSegment] = useState<string>('');
   const [page, setPage] = useState(1);
   const limit = 10;
+  const [sortBy, setSortBy] = useState<string>('risk_score');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  // Dynamic segments data from backend
+  const { data: segmentsData } = useSegments();
+
+  // Automatically select the first segment once backend data loads
+  React.useEffect(() => {
+    if (segmentsData?.items && segmentsData.items.length > 0 && !selectedSegment) {
+      const firstState = segmentsData.items[0].current_state || segmentsData.items[0].state;
+      setSelectedSegment(firstState.toLowerCase());
+    }
+  }, [segmentsData, selectedSegment]);
 
   const { data, isLoading, isError } = useCustomers({
     page,
     limit,
-    sort_by: 'risk_score',
-    sort_order: 'desc',
-    current_state: selectedSegment,
+    sort_by: sortBy,
+    sort_order: sortOrder,
+    current_state: selectedSegment || undefined,
   });
 
   const customers = data?.data?.customers || [];
@@ -52,71 +192,70 @@ function SegmentsPageContent() {
     has_previous: false,
   };
 
-  const segments = [
-    {
-      id: 'liquidity_stress',
-      name: 'Liquidity Stress',
-      description: 'Accounts exhibiting delayed clearances, elevated DSO, and limit overages.',
-      icon: Flame,
-      color: 'border-red-200 bg-red-50 text-red-700',
-      badgeVariant: 'danger' as const,
-      accountsCount: '49 Accounts',
-      exposure: '₹12.4M',
-      trend: '↑ 6 Accounts',
-      recentChanges: 'Liquidity contraction',
-      recommendation: 'Tighten payment terms to Net-15 immediately',
-      averageRisk: '85%'
-    },
-    {
-      id: 'monitor',
-      name: 'Monitor',
-      description: 'Minor settlement slowdowns or return inconsistencies; deserves proactive review.',
-      icon: AlertTriangle,
-      color: 'border-amber-200 bg-amber-50 text-amber-700',
-      badgeVariant: 'warning' as const,
-      accountsCount: '18 Accounts',
-      exposure: '₹4.2M',
-      trend: '↓ 2 Accounts',
-      recentChanges: 'Risk status stabilized',
-      recommendation: 'Send proactive payment notifications & warnings',
-      averageRisk: '62%'
-    },
-    {
-      id: 'healthy',
-      name: 'Healthy & Accelerating',
-      description: 'Consistent payment cycles, expanding volumes, and stable trust indicators.',
-      icon: TrendingUp,
-      color: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-      badgeVariant: 'accent' as const,
-      accountsCount: '152 Accounts',
-      exposure: '₹28.1M',
-      trend: '↑ 14 Accounts',
-      recentChanges: 'Credit profile upgrades',
-      recommendation: 'Extend credit limits and propose early payment discounts',
-      averageRisk: '15%'
-    },
-    {
-      id: 'active',
-      name: 'Active Baseline',
-      description: 'Accounts operating within their normal credit terms and transaction patterns.',
-      icon: CheckCircle,
-      color: 'border-blue-200 bg-blue-50 text-blue-700',
-      badgeVariant: 'primary' as const,
-      accountsCount: '88 Accounts',
-      exposure: '₹15.6M',
-      trend: 'Stable',
-      recentChanges: 'Standard operations',
-      recommendation: 'Maintain standard billing parameters and monthly audits',
-      averageRisk: '34%'
-    }
-  ];
+  const mappedSegments = useMemo(() => {
+    const list = [...(segmentsData?.items || [])];
+    list.sort((a, b) => {
+      const aState = (a.current_state || a.state || '').toUpperCase();
+      const bState = (b.current_state || b.state || '').toUpperCase();
+      const aPriority = statePriority[aState] ?? 100;
+      const bPriority = statePriority[bState] ?? 100;
+      return aPriority - bPriority;
+    });
 
+    return list.map(backendItem => {
+      const stateKey = backendItem.current_state || backendItem.state;
+      const id = stateKey.toLowerCase();
+      const config = getSegmentConfig(stateKey);
+
+      const count = backendItem.count ?? 0;
+      const exposureVal = backendItem.exposure || backendItem.outstanding || 0;
+      const netChange = backendItem.net_change ?? backendItem.trend ?? 0;
+
+      const trendText = netChange > 0 
+        ? `↑ ${netChange} Account${netChange > 1 ? 's' : ''}` 
+        : netChange < 0 
+          ? `↓ ${Math.abs(netChange)} Account${Math.abs(netChange) > 1 ? 's' : ''}` 
+          : 'Stable';
+
+      return {
+        id,
+        name: config.name,
+        description: config.description,
+        icon: config.icon,
+        color: config.color,
+        badgeVariant: config.badgeVariant,
+        accountsCount: `${count} Account${count !== 1 ? 's' : ''}`,
+        exposure: formatCurrency(exposureVal),
+        trend: trendText,
+        rawCount: count,
+        rawExposure: exposureVal,
+        rawNetChange: netChange,
+        rawIn: backendItem.movement_in || 0,
+        rawOut: backendItem.movement_out || 0,
+        recommendation: config.recommendation,
+        averageRisk: config.averageRisk,
+        recentChanges: config.recentChanges,
+      };
+    });
+  }, [segmentsData]);
+
+  const handleSort = (key: string) => {
+    let backendKey = key;
+    if (key === 'safety_score') {
+      backendKey = 'risk_score';
+    }
+    const isAsc = sortBy === backendKey && sortOrder === 'asc';
+    setSortBy(backendKey);
+    setSortOrder(isAsc ? 'desc' : 'asc');
+    setPage(1);
+  };
 
   const columns: TableColumn<any>[] = [
     {
       key: 'customer_name',
       header: 'Customer',
       pinned: true,
+      sortable: true,
       width: 250,
       render: (row) => (
         <div>
@@ -129,12 +268,14 @@ function SegmentsPageContent() {
     {
       key: 'health_score',
       header: 'Health Score',
+      sortable: true,
       width: 140,
       render: (row) => <HealthIndicator score={row.health_score} size="sm" />
     },
     {
       key: 'safety_score',
       header: 'Safety Score',
+      sortable: true,
       width: 140,
       render: (row) => <RiskIndicator score={row.safety_score} size="sm" />
     },
@@ -142,6 +283,7 @@ function SegmentsPageContent() {
       key: 'outstanding_current',
       header: 'Outstanding Exposure',
       align: 'right',
+      sortable: true,
       width: 170,
       render: (row) => <span className="font-mono font-bold text-slate-900 text-sm">{formatCurrency(row.outstanding_current)}</span>
     },
@@ -183,64 +325,50 @@ function SegmentsPageContent() {
               <h3 className="font-headline text-base font-bold text-slate-800 tracking-tight">Segment Heatmap</h3>
               <p className="text-[11px] text-slate-400 font-sans mt-0.5">Distribution of accounts and active exposures.</p>
             </div>
-            
-            {/* Time Range Filter (Trend Evolution) */}
-            <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200/60 font-sans text-[10px] font-bold">
-              <button 
-                onClick={() => setTimeRange('7d')}
-                className={`px-2 py-1 rounded-md transition-all cursor-pointer border-0 ${timeRange === '7d' ? 'bg-white text-teal-600 shadow-sm' : 'text-slate-400 bg-transparent'}`}
-              >
-                7D
-              </button>
-              <button 
-                onClick={() => setTimeRange('30d')}
-                className={`px-2 py-1 rounded-md transition-all cursor-pointer border-0 ${timeRange === '30d' ? 'bg-white text-teal-600 shadow-sm' : 'text-slate-400 bg-transparent'}`}
-              >
-                30D
-              </button>
-            </div>
           </div>
 
           {/* Segment Heatmap list representation */}
           <div className="space-y-4">
-            {[
-              { label: 'Liquidity Stress', count: 49, exposure: '₹12.4M', pct: 49 / 152 * 100, color: 'bg-red-500' },
-              { label: 'Monitor', count: 18, exposure: '₹4.2M', pct: 18 / 152 * 100, color: 'bg-amber-500' },
-              { label: 'Healthy & Accelerating', count: 152, exposure: '₹28.1M', pct: 100, color: 'bg-emerald-500' },
-              { label: 'Active Baseline', count: 88, exposure: '₹15.6M', pct: 88 / 152 * 100, color: 'bg-blue-500' }
-            ].map((item, idx) => (
-              <div key={idx} className="space-y-1">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="font-sans font-semibold text-slate-700">{item.label}</span>
-                  <span className="text-slate-400 font-mono text-[10px] font-semibold">{item.count} accts • {item.exposure}</span>
+            {mappedSegments.map((item, idx) => {
+              const totalExposure = mappedSegments.reduce((sum, s) => sum + s.rawExposure, 0) || 1;
+              const pct = (item.rawExposure / totalExposure) * 100;
+              return (
+                <div key={idx} className="space-y-1">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-sans font-semibold text-slate-700">{item.name}</span>
+                    <span className="text-slate-400 font-mono text-[10px] font-semibold">{item.accountsCount} • {item.exposure}</span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                    <div 
+                      className={`${item.id === 'stressed' || item.id === 'distressed' || item.id === 'declining' ? 'bg-red-500' : item.id === 'overleveraged' || item.id === 'recovering' ? 'bg-amber-500' : item.id === 'healthy' || item.id === 'growing' || item.id === 'expanding' ? 'bg-emerald-500' : 'bg-blue-500'} h-full transition-all duration-300`} 
+                      style={{ width: `${pct}%` }}
+                    ></div>
+                  </div>
                 </div>
-                <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                  <div className={`${item.color} h-full transition-all duration-300`} style={{ width: `${item.pct}%` }}></div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Cohort Movement */}
           <div className="pt-4 border-t border-slate-100 space-y-3">
-            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide">Cohort Movement ({timeRange === '7d' ? '7 Days' : '30 Days'})</h4>
+            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide">Cohort Movement (WoW)</h4>
             <div className="grid grid-cols-3 gap-2 text-center text-xs">
               <div className="bg-red-50/50 border border-red-100 p-2.5 rounded-xl">
                 <span className="text-[9px] uppercase text-red-500 font-bold block">Moved In</span>
                 <strong className="text-red-700 font-headline font-bold text-sm block mt-0.5">
-                  {timeRange === '7d' ? '+3' : '+14'}
+                  +{mappedSegments.reduce((sum, s) => sum + s.rawIn, 0)}
                 </strong>
               </div>
               <div className="bg-emerald-50/50 border border-emerald-100 p-2.5 rounded-xl">
                 <span className="text-[9px] uppercase text-emerald-500 font-bold block">Moved Out</span>
                 <strong className="text-emerald-700 font-headline font-bold text-sm block mt-0.5">
-                  {timeRange === '7d' ? '-2' : '-8'}
+                  -{mappedSegments.reduce((sum, s) => sum + s.rawOut, 0)}
                 </strong>
               </div>
               <div className="bg-slate-50 border border-slate-200/60 p-2.5 rounded-xl">
                 <span className="text-[9px] uppercase text-slate-400 font-bold block">Net Change</span>
-                <strong className="text-slate-700 font-headline font-bold text-sm block mt-0.5">
-                  {timeRange === '7d' ? '+1' : '+6'}
+                <strong className={`${mappedSegments.reduce((sum, s) => sum + s.rawNetChange, 0) >= 0 ? 'text-teal-700' : 'text-red-700'} font-headline font-bold text-sm block mt-0.5`}>
+                  {mappedSegments.reduce((sum, s) => sum + s.rawNetChange, 0) >= 0 ? '+' : ''}{mappedSegments.reduce((sum, s) => sum + s.rawNetChange, 0)}
                 </strong>
               </div>
             </div>
@@ -249,18 +377,10 @@ function SegmentsPageContent() {
 
         {/* Right 2 Columns: Category Selector Cards */}
         <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {segments.map((seg) => {
+          {mappedSegments.map((seg) => {
             const isSelected = selectedSegment === seg.id;
             const Icon = seg.icon;
-            
-            // Adjust segment trends according to selected range
-            let trendLabel = seg.trend;
-            if (timeRange === '7d') {
-              if (seg.id === 'liquidity_stress') trendLabel = '↑ 1 Account';
-              if (seg.id === 'monitor') trendLabel = 'Stable';
-              if (seg.id === 'healthy') trendLabel = '↑ 3 Accounts';
-              if (seg.id === 'active') trendLabel = '↓ 1 Account';
-            }
+            const trendLabel = seg.trend;
 
             return (
               <div
@@ -344,6 +464,9 @@ function SegmentsPageContent() {
             isLoading={isLoading}
             isError={isError}
             errorMessage="Could not retrieve segment customer records. Verify core API connection."
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSort={handleSort}
             page={page}
             totalPages={pagination.total_pages}
             onPageChange={(p) => setPage(p)}
@@ -365,12 +488,6 @@ function SegmentsPageContent() {
                 </div>
 
                 <div className="flex gap-2 pt-2">
-                  <button
-                    onClick={() => alert('Recalculating behavioral segments...')}
-                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200/85 text-slate-700 font-bold rounded-lg cursor-pointer transition-all uppercase text-[10px]"
-                  >
-                    Recalculate Segment
-                  </button>
                   <button
                     onClick={() => router.push('/customers')}
                     className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg cursor-pointer transition-all uppercase text-[10px] border-0"
@@ -394,4 +511,3 @@ export default function SegmentsPage() {
     </RouteErrorBoundary>
   );
 }
-

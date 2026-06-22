@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useDashboardQueues, useTopContributors } from '@/hooks/useDashboard';
+import { usePortfolioAnalytics } from '@/hooks/queries/usePortfolioAnalytics';
 import { formatCurrency, formatPercent } from '@/lib/utils';
 import Table, { TableColumn } from '@/components/ui/Table';
 import Badge from '@/components/ui/Badge';
@@ -11,6 +12,8 @@ import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 
 function OpportunitiesPageContent() {
   const { improving, isLoading: isQueuesLoading } = useDashboardQueues();
+  const { data: portfolioData } = usePortfolioAnalytics();
+  const growthTrajectory = portfolioData?.growth_analytics?.growth_trajectory || portfolioData?.growth_trajectory || 'STABLE';
   const { data: topContributors, isLoading: isContributorsLoading } = useTopContributors();
 
   const isLoading = isQueuesLoading || isContributorsLoading;
@@ -164,7 +167,7 @@ function OpportunitiesPageContent() {
         <div className="bg-surface border border-outline-variant p-6 rounded-xl flex items-center justify-between">
           <div className="space-y-1">
             <span className="text-[10px] font-bold text-outline uppercase tracking-wider block">Target Conversion Index</span>
-            <span className="font-headline text-2xl font-extrabold text-brand-gold">ACCELERATING</span>
+            <span className="font-headline text-2xl font-extrabold text-brand-gold">{growthTrajectory}</span>
           </div>
           <div className="p-3 bg-brand-gold/10 text-brand-gold rounded-lg border border-brand-gold/25">
             <Sparkles className="w-6 h-6" />

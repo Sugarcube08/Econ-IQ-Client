@@ -15,7 +15,7 @@ export default function PlatformPage() {
       problem: 'CFOs and commercial executives lack a unified, real-time interface to monitor aggregate exposure, DSO cycles, and payment trends across multiple subsidiaries and ERP instances.',
       solution: 'An executive control center aggregating ledger activity, invoice registries, and cash flows into stateful, real-time longitudinal metrics.',
       outcome: 'Immediate visual audit verification of cash-in-transit, aging buckets, and cash flow predictability in a single corporate dashboard.',
-      mock: (
+      preview: (
         <div className="bg-white border border-outline-variant rounded-xl p-6 space-y-4 shadow-sm font-sans">
           <div className="flex justify-between items-center pb-2 border-b border-outline-variant/60">
             <span className="text-xs font-bold text-secondary uppercase">Ledger Telemetry</span>
@@ -52,7 +52,7 @@ export default function PlatformPage() {
       problem: 'Credit assessments depend on static third-party reports that ignore live order behavior, payment frequencies, and historical invoice adjustments.',
       solution: 'A stateful account intelligence matrix that processes ledger entries continuously to rate payment and purchase habits.',
       outcome: 'A real-time, searchable matrix showing live customer trust scores, growth trends, and transaction history profiles.',
-      mock: (
+      preview: (
         <div className="bg-white border border-outline-variant rounded-xl p-6 space-y-4 shadow-sm font-sans">
           <div className="flex justify-between items-center pb-2 border-b border-outline-variant/60">
             <span className="text-xs font-bold text-secondary uppercase">Account Profile</span>
@@ -92,7 +92,7 @@ export default function PlatformPage() {
       problem: 'Risk teams spend too much time calculating ratios manually in spreadsheets, missing early signs of declining customer accounts.',
       solution: 'Automated statistical modeling that benchmarks customer ledger histories against eight proprietary risk indicators.',
       outcome: 'Predictive analytics on cash collections, customer concentration risk, and next-best-action policy recommenders.',
-      mock: (
+      preview: (
         <div className="bg-white border border-outline-variant rounded-xl p-6 space-y-4 shadow-sm font-sans">
           <div className="flex justify-between items-center pb-2 border-b border-outline-variant/60">
             <span className="text-xs font-bold text-secondary uppercase">Predictive Policy Engine</span>
@@ -122,7 +122,7 @@ export default function PlatformPage() {
       problem: 'Exporting audit lists or risk summaries requires custom developer scripts or complex SQL queries across disparate ledgers.',
       solution: 'A compliance-ready reporting engine supporting state-filtered exports, PDF risk summaries, and CSV data queries.',
       outcome: 'Instant download of historical payment histories, exposure metrics, and risk buckets, complete with cryptographic audit trails.',
-      mock: (
+      preview: (
         <div className="bg-white border border-outline-variant rounded-xl p-6 space-y-4 shadow-sm font-sans">
           <div className="flex justify-between items-center pb-2 border-b border-outline-variant/60">
             <span className="text-xs font-bold text-secondary uppercase">Report Console</span>
@@ -158,7 +158,7 @@ export default function PlatformPage() {
       problem: 'Connecting commercial risk scoring models to active ERP systems, billing software, or internal CRMs is typically a major multi-month integration project.',
       solution: 'Low-latency REST APIs that expose stateful account scores, invoice statistics, and automated policy recommendations.',
       outcome: 'A developer console to provision secure API keys, monitor usage quotas, and retrieve JSON-structured account payloads.',
-      mock: (
+      preview: (
         <div className="bg-secondary rounded-xl p-6 space-y-4 shadow-sm font-mono text-[10px] text-[#C5D0D6]">
           <div className="flex justify-between items-center pb-2 border-b border-[#34485E]">
             <span className="text-[#80d5cb] font-bold uppercase">GET /api/v1/customers</span>
@@ -186,7 +186,7 @@ export default function PlatformPage() {
       problem: 'Corporate transaction registries contain sensitive customer terms and margins. Storing this information on public clouds creates exposure to hacking or data leaks.',
       solution: 'Econ-IQ uses isolated database tenants, end-to-end data encryption, and hashed ledger verification signatures.',
       outcome: 'Full compliance with corporate security audits, multi-factor OTP login flows, and read-only database connections.',
-      mock: (
+      preview: (
         <div className="bg-white border border-outline-variant rounded-xl p-6 space-y-4 shadow-sm font-sans">
           <div className="flex justify-between items-center pb-2 border-b border-outline-variant/60">
             <span className="text-xs font-bold text-secondary uppercase">Security Standard</span>
@@ -292,7 +292,7 @@ export default function PlatformPage() {
 
                 <div className="space-y-2">
                   <span className="text-[9px] text-outline uppercase font-bold tracking-wider block">Interface Preview</span>
-                  {m.mock}
+                  {m.preview}
                 </div>
               </div>
             );

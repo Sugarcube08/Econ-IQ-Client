@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRiskSignals } from '@/hooks/queries/useRiskSignals';
+import { usePortfolioAnalytics } from '@/hooks/queries/usePortfolioAnalytics';
 import { formatCurrency } from '@/lib/utils';
 import Table, { TableColumn } from '@/components/ui/Table';
 import Badge from '@/components/ui/Badge';
@@ -26,6 +27,9 @@ function RiskSignalsPageContent() {
     sort_order: sortOrder,
     search: searchParam || undefined,
   });
+
+  const { data: portfolioData } = usePortfolioAnalytics();
+  const riskTrend = portfolioData?.portfolio_risk_trend || 'HEALTHY';
 
   const items = useMemo(() => {
     return data?.items || [];
@@ -190,9 +194,19 @@ function RiskSignalsPageContent() {
         <div className="bg-surface border border-outline-variant p-6 rounded-xl flex items-center justify-between">
           <div className="space-y-1">
             <span className="text-[10px] font-bold text-outline uppercase tracking-wider block">Risk Severity Trend</span>
-            <span className="font-headline text-2xl font-extrabold text-brand-gold">PORTFOLIO_MONITOR</span>
+            <span className={`font-headline text-2xl font-extrabold ${
+              riskTrend === 'HEALTHY' ? 'text-emerald-600' :
+              riskTrend === 'MONITOR' ? 'text-amber-500' :
+              riskTrend === 'CONTRACT' ? 'text-blue-500' : 'text-red-600'
+            }`}>
+              {riskTrend}
+            </span>
           </div>
-          <div className="p-3 bg-brand-gold/10 text-brand-gold rounded-lg border border-brand-gold/25">
+          <div className={`p-3 rounded-lg border ${
+            riskTrend === 'HEALTHY' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+            riskTrend === 'MONITOR' ? 'bg-amber-50 text-amber-500 border-amber-100' :
+            riskTrend === 'CONTRACT' ? 'bg-blue-50 text-blue-500 border-blue-100' : 'bg-red-50 text-red-600 border-red-100'
+          }`}>
             <AlertTriangle className="w-6 h-6" />
           </div>
         </div>

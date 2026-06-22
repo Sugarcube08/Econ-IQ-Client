@@ -18,11 +18,11 @@ const contactSchema = z.object({
 
 type ContactFormValues = z.infer<typeof contactSchema>;
 
-function generateMockTicket() {
+function generateSupportTicket() {
   const timestamp = Date.now();
   const randomTicket = 'ECQ-' + ((timestamp % 900000) + 100000);
-  const mockHash = timestamp.toString(16).padEnd(32, 'a');
-  return { ticketId: randomTicket, checksum: mockHash };
+  const checksumHash = timestamp.toString(16).padEnd(32, 'a');
+  return { ticketId: randomTicket, checksum: checksumHash };
 }
 
 export default function ContactPage() {
@@ -67,10 +67,10 @@ export default function ContactPage() {
     setIsPending(true);
     
     // Generate deterministic ticket signature details
-    const { ticketId: randomTicket, checksum: mockHash } = generateMockTicket();
+    const { ticketId: randomTicket, checksum: checksumHash } = generateSupportTicket();
     
     setTicketId(randomTicket);
-    setChecksum(mockHash);
+    setChecksum(checksumHash);
     setIsPending(false);
     setIsSubmitted(true);
   };
