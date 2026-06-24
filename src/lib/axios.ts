@@ -1,7 +1,26 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/stores/useAuthStore';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
+const getApiUrl = (): string => {
+  let url = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
+  
+  if (url) {
+    url = url.trim();
+    // Ensure absolute protocol prefix for external hosts to prevent relative browser resolution
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      if (url.includes('.') || !url.startsWith('/')) {
+        url = `https://${url}`;
+      }
+    }
+    // Ensure /api/v1 suffix is present
+    if (!url.includes('/api/v1') && (url.startsWith('http://') || url.startsWith('https://'))) {
+      url = url.replace(/\/+$/, '') + '/api/v1';
+    }
+  }
+  return url;
+};
+
+const API_URL = getApiUrl();
 
 export const apiClient = axios.create({
   baseURL: API_URL,
