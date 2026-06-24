@@ -49,31 +49,31 @@ export const CustomersService = {
     const predictions = [
       {
         model: 'churn',
-        score: data.churn?.prediction_value ?? 0,
+        score: data.churn?.score ?? 0,
         confidence: data.churn?.confidence ?? 0.85,
         prediction_source: data.churn?.prediction_source ?? 'ML'
       },
       {
         model: 'delinquency',
-        score: data.risk?.prediction_value ?? 0,
+        score: data.risk?.score ?? 0,
         confidence: data.risk?.confidence ?? 0.85,
         prediction_source: data.risk?.prediction_source ?? 'ML'
       },
       {
         model: 'distress',
-        score: data.health?.prediction_value ?? 0,
+        score: data.health?.score ?? 0,
         confidence: data.health?.confidence ?? 0.85,
         prediction_source: data.health?.prediction_source ?? 'ML'
       },
       {
         model: 'recovery',
-        score: data.collection?.prediction_value ?? 0,
+        score: data.collection?.score ?? 0,
         confidence: data.collection?.confidence ?? 0.85,
         prediction_source: data.collection?.prediction_source ?? 'ML'
       },
       {
         model: 'state_transition',
-        score: data.opportunity?.prediction_value ?? 0,
+        score: data.opportunity?.score ?? 0,
         confidence: data.opportunity?.confidence ?? 0.85,
         prediction_source: data.opportunity?.prediction_source ?? 'ML'
       }

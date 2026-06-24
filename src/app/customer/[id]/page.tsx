@@ -86,6 +86,7 @@ function CustomerDetailPageContent({ params }: PageProps) {
   const [commitDate, setCommitDate] = useState('');
 
   // ML Cockpit Workspace state
+  const [timelinePage, setTimelinePage] = useState(1);
 
   // Queries
   const { data: profile, isLoading: isProfileLoading, isError: isProfileError, refetch: refetchProfile } = useCustomerProfile(id);
@@ -117,7 +118,7 @@ function CustomerDetailPageContent({ params }: PageProps) {
   const { data: dbActivities, isLoading: isActivitiesLoading } = useCollectionsActivities({ customer_id: id });
   const { data: dbCommitments, isLoading: isCommitmentsLoading } = usePaymentCommitments({ customer_id: id });
   const { data: dbHistory, isLoading: isHistoryLoading } = useDecisionHistory({ customer_id: id });
-  const { data: timelineData, isLoading: isTimelineLoading } = useTimeline(id, { limit: 50 });
+  const { data: timelineData, isLoading: isTimelineLoading, isFetching: isTimelineFetching } = useTimeline(id, { page: timelinePage, limit: 20 });
 
   // Build a timeline using backend activity timeline endpoint
   const timelineEvents = useMemo(() => {
@@ -153,17 +154,7 @@ function CustomerDetailPageContent({ params }: PageProps) {
   const logCommitmentMutation = useCreateCommitment();
   const recordDecisionMutation = useRecordDecision();
 
-  if (
-    isProfileLoading ||
-    isRecsLoading ||
-    graphs.isLoading ||
-    isAlertsLoading ||
-    isActivitiesLoading ||
-    isCommitmentsLoading ||
-    isHistoryLoading ||
-    isTimelineLoading ||
-    isPredictionsLoading
-  ) {
+  if (isProfileLoading) {
     return <LoadingState message="Reconstructing customer account intelligence dossier..." />;
   }
 
@@ -367,9 +358,21 @@ function CustomerDetailPageContent({ params }: PageProps) {
 
             <div className="border border-slate-100 rounded-xl p-4 bg-slate-50/50">
               {isShapLoading ? (
-                <div className="flex justify-center items-center py-6 gap-2">
-                  <div className="w-4 h-4 border-2 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
-                  <span className="text-[10px] text-slate-500 font-bold">Computing explainability factors...</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse">
+                  <div className="space-y-3">
+                    <div className="h-4 bg-slate-200 rounded w-1/3"></div>
+                    <div className="space-y-2">
+                      <div className="h-14 bg-slate-100 rounded-lg"></div>
+                      <div className="h-14 bg-slate-100 rounded-lg"></div>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="h-4 bg-slate-200 rounded w-1/3"></div>
+                    <div className="space-y-2">
+                      <div className="h-14 bg-slate-100 rounded-lg"></div>
+                      <div className="h-14 bg-slate-100 rounded-lg"></div>
+                    </div>
+                  </div>
                 </div>
               ) : shapExplanation ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -437,7 +440,15 @@ function CustomerDetailPageContent({ params }: PageProps) {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
-              {predictionsList && predictionsList.length > 0 ? (
+              {isPredictionsLoading ? (
+                Array.from({ length: 5 }).map((_, idx) => (
+                  <div key={idx} className="p-3.5 bg-slate-50/50 rounded-xl border border-slate-200/60 space-y-3 animate-pulse">
+                    <div className="h-2.5 bg-slate-200 rounded w-1/2"></div>
+                    <div className="h-6 bg-slate-300 rounded w-3/4"></div>
+                    <div className="h-1.5 bg-slate-200 rounded w-full"></div>
+                  </div>
+                ))
+              ) : predictionsList && predictionsList.length > 0 ? (
                 predictionsList.map((pred) => {
                   const modelLabel = pred.model.replace(/_/g, ' ').toUpperCase();
                   const scoreVal = pred.score;
@@ -491,7 +502,12 @@ function CustomerDetailPageContent({ params }: PageProps) {
             <h3 className="font-headline text-lg font-bold text-slate-800 tracking-tight flex items-center gap-2">
               <ShieldAlert className="w-5 h-5 text-red-500" /> Live Priority Alerts
             </h3>
-            {alertsList && alertsList.length > 0 ? (
+            {isAlertsLoading ? (
+              <div className="space-y-3 animate-pulse">
+                <div className="h-20 bg-slate-100 rounded-xl"></div>
+                <div className="h-20 bg-slate-100 rounded-xl"></div>
+              </div>
+            ) : alertsList && alertsList.length > 0 ? (
               <div className="space-y-3">
                 {alertsList.map((alert) => (
                   <div key={alert.id} className="p-4 border border-red-100 bg-red-50/50 rounded-xl flex justify-between items-start gap-4">
@@ -532,7 +548,13 @@ function CustomerDetailPageContent({ params }: PageProps) {
             </div>
 
             <div className="divide-y divide-slate-100">
-              {recommendations && Array.isArray(recommendations.recommendations) && recommendations.recommendations.length > 0 ? (
+              {isRecsLoading ? (
+                <div className="space-y-4 animate-pulse py-2">
+                  <div className="h-16 bg-slate-100 rounded-xl"></div>
+                  <div className="h-16 bg-slate-100 rounded-xl"></div>
+                  <div className="h-16 bg-slate-100 rounded-xl"></div>
+                </div>
+              ) : recommendations && Array.isArray(recommendations.recommendations) && recommendations.recommendations.length > 0 ? (
                 recommendations.recommendations.map((r, idx) => {
                   let badgeClass = 'text-teal-600 bg-teal-50 border-teal-200';
                   if (r.priority === 'HIGH' || r.priority === 'CRITICAL') {
@@ -598,7 +620,16 @@ function CustomerDetailPageContent({ params }: PageProps) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 font-medium">
-                    {dbHistory.map((hist) => (
+                    {isHistoryLoading ? (
+                      Array.from({ length: 3 }).map((_, idx) => (
+                        <tr key={idx} className="animate-pulse border-b border-slate-50 last:border-0">
+                          <td className="py-2.5"><div className="h-3.5 bg-slate-200 rounded w-3/4"></div></td>
+                          <td className="py-2.5"><div className="h-3.5 bg-slate-200 rounded w-1/2"></div></td>
+                          <td className="py-2.5"><div className="h-5 bg-slate-200 rounded w-20"></div></td>
+                          <td className="py-2.5"><div className="h-3.5 bg-slate-200 rounded w-5/6"></div></td>
+                        </tr>
+                      ))
+                    ) : dbHistory.map((hist) => (
                       <tr key={hist.id} className="hover:bg-slate-50/50">
                         <td className="py-2.5 text-slate-500">{new Date(hist.timestamp).toLocaleString()}</td>
                         <td className="py-2.5 text-slate-700 font-bold">{hist.performed_by}</td>
@@ -737,7 +768,13 @@ function CustomerDetailPageContent({ params }: PageProps) {
             <h3 className="font-headline text-md font-bold text-slate-800 border-b border-slate-100 pb-2 flex items-center gap-1.5">
               <Activity className="w-4 h-4 text-slate-500" /> Behavioral Memory timeline
             </h3>
-            <Timeline events={timelineEvents} />
+            <Timeline
+              events={timelineEvents}
+              currentPage={timelinePage}
+              totalPages={timelineData?.total_pages || 1}
+              onPageChange={setTimelinePage}
+              isFetching={isTimelineFetching}
+            />
           </div>
 
         </div>

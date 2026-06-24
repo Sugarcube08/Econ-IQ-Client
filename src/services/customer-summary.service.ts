@@ -1,5 +1,4 @@
 import { apiClient } from '@/lib/axios';
-import { StandardResponse } from '@/types/response';
 
 export interface RecentActivityItem {
   id: string;
@@ -27,8 +26,8 @@ export interface CustomerSummaryData {
 }
 
 export const CustomerSummaryService = {
-  async getCustomerSummary(id: string): Promise<StandardResponse<CustomerSummaryData>> {
-    const res = await apiClient.get<StandardResponse<CustomerSummaryData>>(`/customer/${id}/summary`);
+  async getCustomerSummary(id: string): Promise<CustomerSummaryData> {
+    const res = await apiClient.get<CustomerSummaryData>(`/customer/${id}/summary`);
     return res.data;
   },
 };
