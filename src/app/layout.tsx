@@ -4,8 +4,30 @@ import Providers from './providers';
 import ClientLayout from './client-layout';
 
 export const metadata: Metadata = {
-  title: 'Econ-IQ | Enterprise Intelligence',
-  description: 'Stateful B2B trade network commercial risk and behavior scoring platform.',
+  metadataBase: new URL('https://econ-iq-client.vercel.app'),
+  title: 'Econ-IQ | Commercial Risk & Behavior Scoring Platform',
+  description: 'Stateful B2B trade network commercial risk and behavior scoring platform for enterprise intelligence.',
+  openGraph: {
+    title: 'Econ-IQ | Commercial Risk & Behavior Scoring Platform',
+    description: 'Stateful B2B trade network commercial risk and behavior scoring platform for enterprise intelligence.',
+    url: 'https://econ-iq-client.vercel.app',
+    siteName: 'Econ-IQ',
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 675,
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Econ-IQ | Commercial Risk & Behavior Scoring Platform',
+    description: 'Stateful B2B trade network commercial risk and behavior scoring platform for enterprise intelligence.',
+    images: ['/og-image.jpg'],
+  },
 };
 
 export default function RootLayout({
