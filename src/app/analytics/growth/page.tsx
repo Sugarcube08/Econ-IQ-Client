@@ -10,6 +10,7 @@ import UnifiedBehaviorGraph from '@/components/ui/UnifiedBehaviorGraph';
 import { TrendingUp, ArrowRight, Search } from 'lucide-react';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import Button from '@/components/ui/Button';
+import LoadingState from '@/components/ui/LoadingState';
 
 function GrowthAnalyticsPageContent() {
   const [page, setPage] = useState(1);
@@ -41,9 +42,8 @@ function GrowthAnalyticsPageContent() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
-        <div className="w-12 h-12 border-4 border-brand-accent border-t-transparent rounded-full animate-spin"></div>
-        <p className="font-sans text-sm text-outline">Loading sales analytics telemetry...</p>
+      <div className="p-6">
+        <LoadingState message="Loading sales analytics telemetry..." />
       </div>
     );
   }

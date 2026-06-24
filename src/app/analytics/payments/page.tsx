@@ -10,6 +10,7 @@ import Table, { TableColumn } from '@/components/ui/Table';
 import UnifiedBehaviorGraph from '@/components/ui/UnifiedBehaviorGraph';
 import { DollarSign, ArrowRight } from 'lucide-react';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
+import LoadingState from '@/components/ui/LoadingState';
 
 function PaymentAnalyticsPageContent() {
   const { data: graphsTimeline, isLoading: isChartsLoading, isError: isChartsError } = useDashboardGraphs(365, 'monthly');
@@ -25,9 +26,8 @@ function PaymentAnalyticsPageContent() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
-        <div className="w-12 h-12 border-4 border-brand-accent border-t-transparent rounded-full animate-spin"></div>
-        <p className="font-sans text-sm text-outline">Loading payment analytics telemetry...</p>
+      <div className="p-6">
+        <LoadingState message="Loading payment analytics telemetry..." />
       </div>
     );
   }

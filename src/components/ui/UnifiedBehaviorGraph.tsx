@@ -114,11 +114,36 @@ export default function UnifiedBehaviorGraph({
   if (isLoading) {
     return (
       <div
-        className="w-full flex flex-col items-center justify-center bg-white border border-slate-200 rounded-2xl p-6"
+        className="w-full flex flex-col justify-between bg-white border border-slate-200 rounded-2xl p-6 animate-pulse"
         style={{ height: `${height}px` }}
       >
-        <Loader2 className="w-8 h-8 animate-spin text-teal-600 mb-2 shrink-0" />
-        <span className="text-xs text-slate-500 font-semibold font-sans">Compiling timeline metrics...</span>
+        <div className="flex justify-between items-center w-full">
+          <div className="h-3 bg-slate-200 rounded w-1/4"></div>
+          <div className="flex gap-2">
+            <div className="h-5 bg-slate-100 rounded w-12"></div>
+            <div className="h-5 bg-slate-100 rounded w-12"></div>
+          </div>
+        </div>
+        
+        {/* Mocking graph lines inside the SVG viewport area */}
+        <div className="flex-1 w-full flex items-end gap-3 px-2 pt-6 pb-2">
+          {Array.from({ length: 15 }).map((_, idx) => {
+            const h = [40, 60, 35, 75, 50, 90, 65, 45, 80, 55, 70, 85, 30, 95, 60][idx % 15];
+            return (
+              <div 
+                key={idx} 
+                className="flex-1 bg-slate-100/70 rounded-t-sm" 
+                style={{ height: `${h}%` }}
+              ></div>
+            );
+          })}
+        </div>
+
+        <div className="flex justify-between w-full pt-4 border-t border-slate-100">
+          <div className="h-2 bg-slate-100 rounded w-16"></div>
+          <div className="h-2 bg-slate-100 rounded w-16"></div>
+          <div className="h-2 bg-slate-100 rounded w-16"></div>
+        </div>
       </div>
     );
   }

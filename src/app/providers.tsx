@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import QueryProvider from '@/providers/query-provider';
 import { useAuthStore } from '@/stores/useAuthStore';
+import LoadingState from '@/components/ui/LoadingState';
 import { AuthService } from '@/services/auth.service';
 
 // Cache the session recovery promise at module level to prevent concurrent duplicate calls during Strict Mode double-mounts
@@ -51,11 +52,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-[#101417] flex items-center justify-center text-white">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-8 h-8 border-4 border-[#80d5cb] border-t-transparent rounded-full animate-spin"></div>
-          <p className="font-sans text-sm text-[#bdc9c6] tracking-wide">Initializing Command Center...</p>
-        </div>
+      <div className="min-h-screen bg-background p-8 flex items-center justify-center">
+        <LoadingState message="Initializing Command Center..." />
       </div>
     );
   }

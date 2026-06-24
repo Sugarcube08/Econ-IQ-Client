@@ -9,6 +9,7 @@ import PublicNavbar from '@/components/marketing/Navbar';
 import PublicFooter from '@/components/marketing/Footer';
 
 import { LogOut } from 'lucide-react';
+import LoadingState from '@/components/ui/LoadingState';
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -109,11 +110,8 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   if (isInternalShell) {
     if (!isAuthenticated) {
       return (
-        <div className="min-h-screen bg-background flex items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-8 h-8 border-4 border-brand-accent border-t-transparent rounded-full animate-spin"></div>
-            <p className="font-sans text-sm text-outline tracking-wide">Securing connection...</p>
-          </div>
+        <div className="min-h-screen bg-background p-8 flex items-center justify-center">
+          <LoadingState message="Securing connection..." />
         </div>
       );
     }

@@ -7,7 +7,7 @@ interface LoadingStateProps {
   type?: 'spinner' | 'skeleton';
 }
 
-export default function LoadingState({ message = 'Reconstructing ledger telemetries...', type = 'spinner' }: LoadingStateProps) {
+export default function LoadingState({ message = 'Reconstructing ledger telemetries...', type = 'skeleton' }: LoadingStateProps) {
   if (type === 'skeleton') {
     return (
       <div className="space-y-6 w-full animate-pulse">

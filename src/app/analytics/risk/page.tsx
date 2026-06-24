@@ -10,6 +10,7 @@ import Table, { TableColumn } from '@/components/ui/Table';
 import Badge from '@/components/ui/Badge';
 import { ShieldAlert, ArrowRight, PieChart } from 'lucide-react';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
+import LoadingState from '@/components/ui/LoadingState';
 
 function RiskAnalyticsPageContent() {
   const { stateDistribution, isLoading: isChartsLoading } = useDashboardCharts();
@@ -25,9 +26,8 @@ function RiskAnalyticsPageContent() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
-        <div className="w-12 h-12 border-4 border-brand-accent border-t-transparent rounded-full animate-spin"></div>
-        <p className="font-sans text-sm text-outline">Compiling risk telemetry...</p>
+      <div className="p-6">
+        <LoadingState message="Compiling risk telemetry..." />
       </div>
     );
   }

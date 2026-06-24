@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useOnboardingStore } from '@/stores/useOnboardingStore';
 import { useAuthStore } from '@/stores/useAuthStore';
+import LoadingState from '@/components/ui/LoadingState';
 
 export default function OnboardingWizardPage() {
   const router = useRouter();
@@ -35,9 +36,8 @@ export default function OnboardingWizardPage() {
 
   if (!mounted) {
     return (
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-10 h-10 border-4 border-brand-accent border-t-transparent rounded-full animate-spin"></div>
-        <p className="font-sans text-xs text-outline">Initializing workspace...</p>
+      <div className="p-8 w-full max-w-xl">
+        <LoadingState message="Initializing workspace..." />
       </div>
     );
   }

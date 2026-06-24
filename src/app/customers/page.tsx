@@ -35,6 +35,7 @@ import {
   FileSpreadsheet,
   Loader2
 } from 'lucide-react';
+import LoadingState from '@/components/ui/LoadingState';
 
 function CustomerRowExpansionPanel({ customerId, safetyScore }: { customerId: string; safetyScore: number }) {
   const { data: summary, isLoading, isError } = useCustomerSummary(customerId);
@@ -42,9 +43,17 @@ function CustomerRowExpansionPanel({ customerId, safetyScore }: { customerId: st
 
   if (isLoading) {
     return (
-      <div className="w-full flex items-center justify-center py-6 text-slate-500 font-sans text-xs">
-        <Loader2 className="w-4 h-4 animate-spin text-teal-600 mr-2" />
-        Retrieving customer behavioral memory...
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 font-sans text-xs pt-2 pb-4 px-2 border-t border-slate-100 bg-slate-50/20 animate-pulse">
+        {Array.from({ length: 5 }).map((_, idx) => (
+          <div key={idx} className="bg-white border border-slate-200 p-4 rounded-xl space-y-3 shadow-sm h-36">
+            <div className="h-2.5 bg-slate-200 rounded w-1/2"></div>
+            <div className="space-y-1.5 pt-1">
+              <div className="h-2 bg-slate-100 rounded w-3/4"></div>
+              <div className="h-2 bg-slate-100 rounded w-5/6"></div>
+              <div className="h-2 bg-slate-100 rounded w-2/3"></div>
+            </div>
+          </div>
+        ))}
       </div>
     );
   }
@@ -519,16 +528,16 @@ export default function CustomersPage() {
 
   if (!mounted) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center bg-slate-50/50">
-        <div className="w-8 h-8 border-4 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
+      <div className="p-8">
+        <LoadingState message="Initializing Workspace..." />
       </div>
     );
   }
 
   return isAuthenticated ? (
     <Suspense fallback={
-      <div className="min-h-[60vh] flex items-center justify-center bg-slate-50/50">
-        <div className="w-8 h-8 border-4 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
+      <div className="p-8">
+        <LoadingState message="Syncing data registry..." />
       </div>
     }>
       <AuthenticatedCustomers />
