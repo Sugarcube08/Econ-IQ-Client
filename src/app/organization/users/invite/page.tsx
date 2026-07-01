@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useOnboardingStore } from '@/stores/useOnboardingStore';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
@@ -20,7 +19,6 @@ interface ProvisionedUser {
 }
 
 export default function InviteTeamPage() {
-  const { updateChecklistItem } = useOnboardingStore();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'ADMIN' | 'ANALYST' | 'VIEWER'>('ANALYST');
@@ -71,9 +69,6 @@ export default function InviteTeamPage() {
     setFullName('');
     setEmail('');
     setIsProvisioning(false);
-
-    // Check off user provisioning checklist task in onboarding
-    updateChecklistItem('firstUser', true);
   };
 
   const columns = [

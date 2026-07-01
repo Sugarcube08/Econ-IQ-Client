@@ -12,7 +12,6 @@ import { useCollectionsActivities } from '@/hooks/queries/useCollectionsActiviti
 import { usePaymentCommitments } from '@/hooks/queries/usePaymentCommitments';
 import { useCustomers } from '@/hooks/queries/useCustomers';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { useOnboardingStore } from '@/stores/useOnboardingStore';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 
 // UI components
@@ -61,13 +60,6 @@ function DashboardSkeleton() {
 function DashboardPageContent() {
   const router = useRouter();
 
-  // Onboarding store states
-  const {
-    checklist,
-    orgProfile,
-    updateChecklistItem,
-  } = useOnboardingStore();
-
   // Queries
   const { data: overview, isLoading: isOverviewLoading, isError: isOverviewError } = useDashboardOverview();
   const { data: alertsCount, isLoading: isAlertsCountLoading, isError: isAlertsCountError } = useAlertsCount();
@@ -81,108 +73,6 @@ function DashboardPageContent() {
   const { data: graphsTimeline, isLoading: isChartsLoading, isError: isChartsError } = useDashboardGraphs(365, 'monthly');
 
   const acknowledgeMutation = useAcknowledgeAlert();
-
-  const handleSyncDataSimulated = async () => {
-    updateChecklistItem('firstSync', true);
-    updateChecklistItem('firstRun', true);
-  };
-
-  // Setup Activation Checklist (Empty State representation)
-  if (!checklist.firstSync) {
-    const checklistItems = [
-      { key: 'orgSetup' as const, label: 'Complete Organization Profile' },
-      { key: 'firstUser' as const, label: 'Provision Team Access' },
-      { key: 'firstSync' as const, label: 'Synchronize ERP Ledger' },
-      { key: 'firstRun' as const, label: 'Compute Credit Behavior Scores' },
-      { key: 'firstReport' as const, label: 'Generate Compliance Audit List' }
-    ];
-    const completedCount = checklistItems.filter(item => checklist[item.key]).length;
-    const progressPercent = Math.round((completedCount / checklistItems.length) * 100);
-
-    return (
-      <PageContent>
-        {/* Welcome Banner */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm space-y-6 font-sans">
-          <Badge variant="accent" size="sm">
-            Setup Wizard Completed
-          </Badge>
-          <h2 className="font-headline text-3xl font-extrabold text-teal-800">
-            Welcome to {orgProfile.name || 'Econ-IQ'}
-          </h2>
-          <p className="text-slate-500 leading-relaxed max-w-2xl text-sm md:text-base">
-            Your secure analytical database tenant has been provisioned. To unlock the executive dashboard, credit telemetry scores, and deteriorating warning queues, synchronize your ERP invoice ledgers.
-          </p>
-          <div className="pt-2">
-            <Button
-              onClick={handleSyncDataSimulated}
-              variant="accent"
-              icon={RefreshCw}
-            >
-              Sync Demo Ledger Data
-            </Button>
-          </div>
-        </div>
-
-        {/* Getting Started Activation Checklist Widget */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm space-y-6">
-          <div className="flex justify-between items-center">
-            <h3 className="font-headline text-lg font-bold text-teal-800">Econ-IQ Activation Checklist</h3>
-            <span className="text-xs font-mono font-bold text-teal-600">{progressPercent}% Completed</span>
-          </div>
-
-          {/* Progress bar */}
-          <div className="w-full h-2 bg-slate-100 rounded-full border border-slate-200/50 overflow-hidden">
-            <div className="bg-teal-600 h-full transition-all duration-500" style={{ width: `${progressPercent}%` }}></div>
-          </div>
-
-          <div className="space-y-3 font-sans text-xs">
-            {checklistItems.map((item) => (
-              <div key={item.key} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200/60">
-                <div className="flex items-center gap-3">
-                  <span className={`material-symbols-outlined text-[20px] ${checklist[item.key] ? 'text-teal-600' : 'text-slate-300'
-                    }`}>
-                    {checklist[item.key] ? 'check_circle' : 'radio_button_unchecked'}
-                  </span>
-                  <span className={`font-semibold text-sm ${checklist[item.key] ? 'text-slate-800' : 'text-slate-500'}`}>
-                    {item.label}
-                  </span>
-                </div>
-
-                {!checklist[item.key] && (
-                  <div>
-                    {item.key === 'firstUser' && (
-                      <Link
-                        href="/organization/users/invite"
-                        className="text-[10px] font-bold text-teal-600 uppercase hover:underline"
-                      >
-                        Invite Team
-                      </Link>
-                    )}
-                    {item.key === 'firstSync' && (
-                      <button
-                        onClick={handleSyncDataSimulated}
-                        className="text-[10px] font-bold text-teal-600 bg-transparent border-0 hover:underline cursor-pointer uppercase"
-                      >
-                        Trigger Ingestion
-                      </button>
-                    )}
-                    {item.key === 'firstReport' && (
-                      <Link
-                        href="/reports"
-                        className="text-[10px] font-bold text-teal-600 uppercase hover:underline"
-                      >
-                        Go to Exporter
-                      </Link>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </PageContent>
-    );
-  }
 
   // 1. Outstanding Exposure
   const outstandingExposureValue = isOverviewError

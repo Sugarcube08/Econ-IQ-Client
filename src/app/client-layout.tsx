@@ -3,7 +3,6 @@
 import React, { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { useOnboardingStore } from '@/stores/useOnboardingStore';
 import AppShell from '@/components/layout/AppShell';
 import PublicNavbar from '@/components/marketing/Navbar';
 import PublicFooter from '@/components/marketing/Footer';
@@ -15,7 +14,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const pathname = usePathname();
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
-  const { isOnboarded } = useOnboardingStore();
 
   const isLoginRoute = pathname === '/login';
   
@@ -56,16 +54,14 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     // Route Protection
-    if (!isAuthenticated && !isPublicRoute && pathname !== '/onboarding') {
+    if (!isAuthenticated && !isPublicRoute) {
       router.push('/login');
     } else if (isAuthenticated) {
-      if (!isOnboarded && pathname !== '/onboarding') {
-        router.push('/onboarding');
-      } else if (isOnboarded && (pathname === '/login' || pathname === '/' || pathname === '/onboarding')) {
+      if (pathname === '/login' || pathname === '/') {
         router.push('/dashboard');
       }
     }
-  }, [isAuthenticated, isOnboarded, isPublicRoute, pathname, router]);
+  }, [isAuthenticated, isPublicRoute, pathname, router]);
 
   // Adjust document theme classes based on route context - defaults to light-first
   useEffect(() => {
@@ -75,35 +71,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   // Render minimal layout for login screen
   if (isLoginRoute) {
     return <div className="bg-background text-on-background min-h-screen">{children}</div>;
-  }
-
-  // Render simplified setup wizard layout
-  if (pathname === '/onboarding') {
-    return (
-      <div className="bg-background text-on-background min-h-screen flex flex-col font-sans">
-        <header className="h-20 border-b border-outline-variant flex items-center justify-between px-8 bg-surface/80 backdrop-blur-md sticky top-0 z-50">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-brand-accent rounded flex items-center justify-center text-on-primary font-bold font-headline text-md shadow-sm">
-              EQ
-            </div>
-            <span className="font-headline text-lg font-extrabold text-on-surface tracking-tight">Econ-IQ Onboarding</span>
-          </div>
-          <button
-            onClick={() => {
-              useAuthStore.getState().clearSession();
-              router.push('/login');
-            }}
-            className="text-xs font-semibold text-danger hover:underline cursor-pointer flex items-center gap-1.5 bg-transparent border-0"
-          >
-            <LogOut className="w-4 h-4 text-danger" />
-            Exit Setup
-          </button>
-        </header>
-        <main className="flex-grow flex items-center justify-center p-md md:p-lg bg-background">
-          {children}
-        </main>
-      </div>
-    );
   }
 
   // Render internal application shell for authenticated views

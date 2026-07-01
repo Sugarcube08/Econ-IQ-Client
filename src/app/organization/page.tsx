@@ -18,8 +18,7 @@ export default function OrganizationSettingsPage() {
     updateOrgProfile,
     updateCommercialConfig,
     updateSecuritySetup,
-    updateDataReadiness,
-    resetOnboarding
+    updateDataReadiness
   } = useOnboardingStore();
 
   const handleSave = () => {
@@ -324,20 +323,7 @@ export default function OrganizationSettingsPage() {
 
           </div>
 
-          <div className="flex justify-between items-center pt-6 border-t border-outline-variant/60">
-            {/* Developer Reset tool */}
-            <button
-              onClick={() => {
-                if (confirm('Reset entire organization onboarding data? This will return you to the setup wizard.')) {
-                  resetOnboarding();
-                  window.location.reload();
-                }
-              }}
-              className="text-[10px] font-bold text-[#ba1a1a] uppercase hover:underline cursor-pointer border-0 bg-transparent"
-            >
-              Reset Setup Data
-            </button>
-
+          <div className="flex justify-end items-center pt-6 border-t border-outline-variant/60">
             <div className="flex items-center gap-3">
               {saveSuccess && (
                 <span className="text-brand-accent text-[10px] font-bold uppercase animate-fade-in flex items-center gap-1">

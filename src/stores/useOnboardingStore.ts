@@ -33,52 +33,32 @@ export interface SecuritySetup {
 }
 
 interface OnboardingState {
-  // Wizard states
-  currentStep: number;
   orgProfile: OrgProfile;
   commercialConfig: CommercialConfig;
   dataReadiness: DataReadiness;
   securitySetup: SecuritySetup;
-  
-  // Status flags
-  isOnboarded: boolean;
-  completedTour: boolean;
-  
-  // Activation Checklist states
-  checklist: {
-    orgSetup: boolean;
-    firstUser: boolean;
-    firstSync: boolean;
-    firstRun: boolean;
-    firstReport: boolean;
-  };
 
   // Multi-org details (pre-prepared architecture)
   activeOrgId: string;
   organizations: Array<{ id: string; name: string }>;
 
   // Actions
-  setStep: (step: number) => void;
   updateOrgProfile: (profile: Partial<OrgProfile>) => void;
   updateCommercialConfig: (config: Partial<CommercialConfig>) => void;
   updateDataReadiness: (readiness: Partial<DataReadiness>) => void;
   updateSecuritySetup: (setup: Partial<SecuritySetup>) => void;
-  completeOnboarding: () => void;
-  resetOnboarding: () => void;
-  setTourCompleted: (completed: boolean) => void;
-  updateChecklistItem: (key: keyof OnboardingState['checklist'], value: boolean) => void;
   switchOrganization: (orgId: string) => void;
   addOrganization: (name: string) => void;
 }
 
 const defaultOrgProfile: OrgProfile = {
-  name: '',
-  industry: '',
-  businessType: '',
-  country: '',
-  state: '',
-  primaryContact: '',
-  companySize: '',
+  name: 'Standard Steel Castings Ltd.',
+  industry: 'manufacturing',
+  businessType: 'corporation',
+  country: 'India',
+  state: 'Punjab',
+  primaryContact: 'Arjan Vohra',
+  companySize: '201-1000',
 };
 
 const defaultCommercialConfig: CommercialConfig = {
@@ -89,16 +69,16 @@ const defaultCommercialConfig: CommercialConfig = {
 };
 
 const defaultDataReadiness: DataReadiness = {
-  erp: 'none',
-  sync: 'none',
-  ledger: 'none',
-  customer: 'none',
+  erp: 'connected',
+  sync: 'connected',
+  ledger: 'connected',
+  customer: 'connected',
 };
 
 const defaultSecuritySetup: SecuritySetup = {
-  adminContact: '',
-  apiAccess: false,
-  userRolesCount: 1,
+  adminContact: 'admin@standardsteel.com',
+  apiAccess: true,
+  userRolesCount: 3,
 };
 
 export const useOnboardingStore = create<OnboardingState>((set, get) => {
@@ -116,20 +96,10 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => {
   }
 
   const initialState = (savedState as OnboardingState | null) || {
-    currentStep: 1,
     orgProfile: defaultOrgProfile,
     commercialConfig: defaultCommercialConfig,
     dataReadiness: defaultDataReadiness,
     securitySetup: defaultSecuritySetup,
-    isOnboarded: false,
-    completedTour: false,
-    checklist: {
-      orgSetup: false,
-      firstUser: false,
-      firstSync: false,
-      firstRun: false,
-      firstReport: false,
-    },
     activeOrgId: 'org_default',
     organizations: [{ id: 'org_default', name: 'Primary Organization' }],
   };
@@ -138,14 +108,10 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => {
     if (typeof window !== 'undefined') {
       const current = { ...get(), ...nextState };
       localStorage.setItem('econ_onboarding_state', JSON.stringify({
-        currentStep: current.currentStep,
         orgProfile: current.orgProfile,
         commercialConfig: current.commercialConfig,
         dataReadiness: current.dataReadiness,
         securitySetup: current.securitySetup,
-        isOnboarded: current.isOnboarded,
-        completedTour: current.completedTour,
-        checklist: current.checklist,
         activeOrgId: current.activeOrgId,
         organizations: current.organizations,
       }));
@@ -154,11 +120,6 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => {
 
   return {
     ...initialState,
-
-    setStep: (step) => {
-      set({ currentStep: step });
-      persist({ currentStep: step });
-    },
 
     updateOrgProfile: (profile) => {
       const updated = { ...get().orgProfile, ...profile };
@@ -176,59 +137,12 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => {
       const updated = { ...get().dataReadiness, ...readiness };
       set({ dataReadiness: updated });
       persist({ dataReadiness: updated });
-      
-      // If ERP or Data sync gets connected, check off data sync in checklist
-      if (updated.erp === 'connected' || updated.sync === 'connected') {
-        get().updateChecklistItem('firstSync', true);
-      }
     },
 
     updateSecuritySetup: (setup) => {
       const updated = { ...get().securitySetup, ...setup };
       set({ securitySetup: updated });
       persist({ securitySetup: updated });
-    },
-
-    completeOnboarding: () => {
-      set({ isOnboarded: true });
-      persist({ isOnboarded: true });
-      get().updateChecklistItem('orgSetup', true);
-    },
-
-    resetOnboarding: () => {
-      const reset = {
-        currentStep: 1,
-        orgProfile: defaultOrgProfile,
-        commercialConfig: defaultCommercialConfig,
-        dataReadiness: defaultDataReadiness,
-        securitySetup: defaultSecuritySetup,
-        isOnboarded: false,
-        completedTour: false,
-        checklist: {
-          orgSetup: false,
-          firstUser: false,
-          firstSync: false,
-          firstRun: false,
-          firstReport: false,
-        },
-        activeOrgId: 'org_default',
-        organizations: [{ id: 'org_default', name: 'Primary Organization' }],
-      };
-      set(reset);
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('econ_onboarding_state');
-      }
-    },
-
-    setTourCompleted: (completed) => {
-      set({ completedTour: completed });
-      persist({ completedTour: completed });
-    },
-
-    updateChecklistItem: (key, value) => {
-      const updatedChecklist = { ...get().checklist, [key]: value };
-      set({ checklist: updatedChecklist });
-      persist({ checklist: updatedChecklist });
     },
 
     switchOrganization: (orgId) => {

@@ -40,8 +40,12 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             const { access_token, refresh_token, user } = sessionData;
             setSession(access_token, refresh_token, user);
           }
-        } catch (e) {
-          console.error('Failed to recover session:', e);
+        } catch (e: any) {
+          if (e?.response?.status === 401) {
+            console.warn('Session expired or unauthorized. User must sign in.');
+          } else {
+            console.error('Failed to recover session:', e);
+          }
           clearSession();
         }
       }

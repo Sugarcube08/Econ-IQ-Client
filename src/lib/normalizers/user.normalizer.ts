@@ -5,7 +5,7 @@ export function normalizeUser(raw: any) {
   const validated = validatePayload(UserSchema, raw, 'UserSchema');
   return {
     ...validated,
-    full_name: validated.full_name || 'Pending Onboarding',
+    full_name: validated.full_name || 'Pending Activation',
     role: (validated.role || 'ANALYST') as 'SUPER_ADMIN' | 'ANALYST',
   };
 }

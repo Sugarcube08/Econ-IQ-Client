@@ -26,7 +26,7 @@ interface HeaderProps {
 export default function Header({ onToggleSidebar }: HeaderProps) {
   const router = useRouter();
   const { user } = useAuth();
-  const { organizations, activeOrgId, updateChecklistItem } = useOnboardingStore();
+  const { organizations, activeOrgId } = useOnboardingStore();
   const [isSyncing, setIsSyncing] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -38,7 +38,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
 
   const handleManualSync = async () => {
     setIsSyncing(true);
-    updateChecklistItem('firstSync', true);
+    // Real sync behavior would trigger API, no simulated checklist checking
     setIsSyncing(false);
     setQuickActionsOpen(false);
   };
